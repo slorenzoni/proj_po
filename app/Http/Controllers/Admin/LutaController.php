@@ -14,6 +14,7 @@ use App\Models\Juiz;
 use App\Models\Luta;
 use App\Models\LutaJuiz;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,9 +83,23 @@ class LutaController extends AdminController
             return back();
         }
 
-        $luta->update($request->atributos());
+        $atributos = $request->atributos();
 
-        $this->sucesso('Luta atualizada.');
+        // Trocar um dos atletas invalida os palpites; inverter os cantos (A ↔ B) não.
+        $trocouAtleta = array_diff(
+            [(int) $atributos['participante_a_id'], (int) $atributos['participante_b_id']],
+            [$luta->participante_a_id, $luta->participante_b_id],
+        ) !== [];
+
+        $palpitesDescartados = DB::transaction(function () use ($luta, $atributos, $trocouAtleta): int {
+            $luta->update($atributos);
+
+            return $trocouAtleta ? $luta->descartarPalpites() : 0;
+        });
+
+        $this->sucesso($palpitesDescartados > 0
+            ? "Luta atualizada. {$palpitesDescartados} palpite(s) foram zerados porque um atleta foi substituído."
+            : 'Luta atualizada.');
 
         return to_route('admin.lutas.edit', $luta);
     }

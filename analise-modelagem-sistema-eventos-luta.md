@@ -488,25 +488,30 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 **Demais pontos:**
 
-- A suíte tem 214 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
+- A suíte tem 257 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
 - `ConfiguracaoPontuacaoSeeder` grava o padrão geral com os valores de partida da seção 6 (10/15/15/22 e as grades de 3 e 5 rounds). É idempotente e não sobrescreve o que o administrador já alterou.
 - Como o ranking geral soma pontos de todas as modalidades, uma categoria com pontuação própria entra nele com régua diferente das demais.
 - Painel administrativo em `/admin` (gate `acessar-admin`), com todas as áreas: cadastros básicos, atletas (fotos e estilos), eventos e card de lutas, andamento ao vivo e placar oficial, usuários e papéis, verificações, patrocínio (patrocinadores, banners, blog) e configuração de pontuação. Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.
 - O andamento da luta (`App\Services\AndamentoLuta`) só aceita as transições válidas: agendada → em andamento → intervalo → próximo round → encerrada, ou cancelada. Não há intervalo após o último round.
 - Registros em uso não podem ser excluídos pelo painel (ex.: organização com eventos, atleta com lutas, juiz com placar).
 - Arquivos enviados (logos, fotos, banners, capas) ficam no disco de mídia; o banco guarda só o caminho. O comprovante de verificação é baixado por rota protegida, nunca por URL pública.
-- Cadastro público cria o perfil de cliente e exige a confirmação de maioridade. A criação da assinatura Free no cadastro (decisão 11) ainda não foi implementada.
+- Cadastro público cria o perfil de cliente, exige a confirmação de maioridade e cria a assinatura Free (decisão 11).
+- **Ao encerrar uma luta** (05/10/2026): o cartel dos dois atletas é atualizado na hora; a pontuação dos palpites e os rankings geral, do evento e da organização são recalculados em fila (`ProcessarResultadoDaLuta`), o que exige um worker de fila rodando (`php artisan queue:work`).
+- **Pontuação do palpite** (`App\Services\Pontuacao`): segue a tabela da seção 6.1, multiplicada pelo `peso_aplicado` do palpite. Empate, sem resultado e desqualificação (em modalidades com rounds) dão zero para todos. O round só conta quando é igual ao `round_fim` informado no encerramento.
+- **Luta cancelada ou atleta substituído:** os palpites da luta são descartados (soft delete) e os usuários precisam palpitar de novo. Inverter os cantos (A ↔ B) não descarta.
 
 ### 8.5 Pendências
 
 - Gateway de pagamento.
-- Ranking geral: histórico completo ou janela móvel.
+- Ranking geral: histórico completo ou janela móvel. **Implementado provisoriamente com o histórico completo.**
 - Prazo de pontuação do placar dos fãs: o padrão semeado é de 5 minutos, valor provisório ainda não confirmado.
-- Critérios de desempate do ranking.
+- Critérios de desempate do ranking. **Implementados provisoriamente como propostos em 6.4:** palpites perfeitos, vencedores corretos e quem palpitou primeiro.
+- Cartel: desqualificação e os métodos do Judô (Ippon, Waza-ari, Golden Score) são somados em "decisão", porque o cartel só tem KO, submissão e decisão. Confirmar se é o desejado ou se o cartel precisa de mais detalhamentos.
+- Desclassificação no Judô pontua o palpite (decisão 7), enquanto a desqualificação nas modalidades com rounds dá zero para todos (seção 6.1). Confirmar se a diferença é intencional.
+- Corrigir o resultado de uma luta já encerrada: não há tela nem regra para desfazer o cartel e repontuar.
 - Auditoria: só o último autor ou histórico completo.
 - Reavaliar chat pago e selo de verificado pago (ver 7.2).
 - Valores válidos de `atletas.tipo` e `atletas.stance`, hoje texto livre.
-- Encerrar a luta ainda não atualiza o cartel dos atletas, não pontua os palpites e não recalcula o ranking.
 - Aprovar uma solicitação de verificação só registra a análise; o selo (`users.verificado`) depende da cobrança, ainda sem gateway.
 - O conteúdo das postagens aceita HTML e não é higienizado ao gravar; precisa ser tratado antes de ser exibido no site público.
 - Não há tela para o administrador cadastrar papéis novos (hoje só o `PapelSeeder`).

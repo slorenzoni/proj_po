@@ -4,12 +4,16 @@ use App\Enums\FuncaoJuiz;
 use App\Enums\MetodoVitoria;
 use App\Enums\NivelAcesso;
 use App\Enums\StatusLuta;
+use App\Jobs\ProcessarResultadoDaLuta;
 use App\Models\Atleta;
 use App\Models\Juiz;
 use App\Models\Luta;
 use App\Models\Placar;
+use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
+    // A pontuação dos palpites roda em fila e tem testes próprios (tests/Feature/Pontuacao).
+    Queue::fake();
     $this->actingAs(administrador(NivelAcesso::Cadastrador));
 });
 
@@ -59,6 +63,8 @@ test('a three round fight runs from the first round to the result', function () 
         ->metodo_vitoria->toBe(MetodoVitoria::DecisaoUnanime)
         ->round_fim->toBe(3)
         ->tempo_fim->toBe('05:00');
+
+    Queue::assertPushed(ProcessarResultadoDaLuta::class, fn (ProcessarResultadoDaLuta $job) => $job->luta->is($luta));
 });
 
 test('there is no interval after the last round', function () {

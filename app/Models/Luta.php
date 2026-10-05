@@ -161,6 +161,19 @@ class Luta extends Model
     }
 
     /**
+     * Descarta os palpites da luta (soft delete, mantendo o histórico). Usado quando a luta
+     * é cancelada ou um atleta é substituído: os usuários precisam palpitar de novo.
+     *
+     * @return int Quantidade de palpites descartados.
+     */
+    public function descartarPalpites(): int
+    {
+        return $this->palpites()->get()
+            ->each(fn (Palpite $palpite) => $palpite->delete())
+            ->count();
+    }
+
+    /**
      * @return HasMany<Mensagem, $this>
      */
     public function mensagens(): HasMany

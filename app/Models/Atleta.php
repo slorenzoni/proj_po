@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\Auditable;
 use App\Concerns\HasPublicUuid;
+use App\Enums\MetodoVitoria;
 use Database\Factories\AtletaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -108,6 +109,31 @@ class Atleta extends Model
             ->withPivot('treinador_id')
             ->withTimestamps()
             ->wherePivotNull('deleted_at');
+    }
+
+    /**
+     * Soma uma vitória ao detalhamento do cartel; os totais são recalculados ao salvar.
+     */
+    public function registrarVitoria(MetodoVitoria $metodo): void
+    {
+        $this->somarAoCartel('vitorias_'.$metodo->tipoNoCartel());
+    }
+
+    public function registrarDerrota(MetodoVitoria $metodo): void
+    {
+        $this->somarAoCartel('derrotas_'.$metodo->tipoNoCartel());
+    }
+
+    public function registrarEmpate(): void
+    {
+        $this->somarAoCartel('empates');
+    }
+
+    private function somarAoCartel(string $coluna): void
+    {
+        // setAttribute + save (e não increment) para o evento "saving" recalcular os totais.
+        $this->setAttribute($coluna, (int) $this->getAttribute($coluna) + 1);
+        $this->save();
     }
 
     protected static function booted(): void

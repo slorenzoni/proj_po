@@ -52,6 +52,39 @@ enum MetodoVitoria: string
             : [self::Ippon, self::WazaAri, self::DecisaoGoldenScore, self::Desqualificacao, self::SemResultado];
     }
 
+    /**
+     * Método do palpite que corresponde a este resultado, ou nulo quando o resultado
+     * não pontua para ninguém: empate, sem resultado e, nas modalidades com rounds,
+     * desqualificação. O palpite não distingue os tipos de decisão.
+     */
+    public function paraPalpite(bool $usaRounds): ?MetodoPalpite
+    {
+        return match ($this) {
+            self::KoTko => MetodoPalpite::KoTko,
+            self::Submissao => MetodoPalpite::Finalizacao,
+            self::DecisaoUnanime, self::DecisaoDividida, self::DecisaoMajoritaria, self::DecisaoGoldenScore => MetodoPalpite::Decisao,
+            self::Ippon => MetodoPalpite::Ippon,
+            self::WazaAri => MetodoPalpite::WazaAri,
+            self::Desqualificacao => $usaRounds ? null : MetodoPalpite::Desclassificacao,
+            self::Empate, self::SemResultado => null,
+        };
+    }
+
+    /**
+     * Em qual detalhamento do cartel do atleta o resultado entra: "ko", "submissao" ou
+     * "decisao". O cartel só tem esses três; desqualificação e os métodos do Judô caem
+     * em "decisao" para o total de lutas fechar. Nulo quando não há vencedor.
+     */
+    public function tipoNoCartel(): ?string
+    {
+        return match ($this) {
+            self::KoTko => 'ko',
+            self::Submissao => 'submissao',
+            self::Empate, self::SemResultado => null,
+            default => 'decisao',
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

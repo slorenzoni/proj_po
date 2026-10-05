@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\PapelPadrao;
+use App\Enums\PlanoAssinatura;
+use App\Enums\StatusAssinatura;
 use App\Models\User;
 use Laravel\Fortify\Features;
 
@@ -99,4 +101,23 @@ test('email of a deleted user can be used in a new registration', function () {
     $response->assertSessionHasNoErrors();
     $this->assertAuthenticated();
     expect(User::withTrashed()->where('email', 'test@example.com')->count())->toBe(2);
+});
+
+test('registration creates an active free subscription without charge', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'maior_de_18' => 'on',
+    ]);
+
+    $assinatura = User::query()->where('email', 'test@example.com')->firstOrFail()->assinaturas()->sole();
+
+    expect($assinatura)
+        ->plano->toBe(PlanoAssinatura::Free)
+        ->status->toBe(StatusAssinatura::Ativa)
+        ->valor->toBe('0.00')
+        ->gateway->toBeNull()
+        ->proxima_cobranca->toBeNull();
 });

@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Enums\MetodoVitoria;
 use App\Enums\StatusLuta;
 use App\Exceptions\AndamentoInvalidoException;
+use App\Jobs\ProcessarResultadoDaLuta;
 use App\Models\Atleta;
 use App\Models\Luta;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Andamento da luta, informado manualmente pelo administrador (decisão de 01/10/2026):
@@ -93,14 +95,22 @@ final class AndamentoLuta
             );
         }
 
-        $luta->update([
-            'status' => StatusLuta::Encerrada,
-            'em_intervalo' => false,
-            'vencedor_id' => $metodo->temVencedor() ? $vencedor?->id : null,
-            'metodo_vitoria' => $metodo,
-            'round_fim' => $roundFim,
-            'tempo_fim' => $tempoFim,
-        ]);
+        DB::transaction(function () use ($luta, $metodo, $vencedor, $roundFim, $tempoFim): void {
+            $luta->update([
+                'status' => StatusLuta::Encerrada,
+                'em_intervalo' => false,
+                'vencedor_id' => $metodo->temVencedor() ? $vencedor?->id : null,
+                'metodo_vitoria' => $metodo,
+                'round_fim' => $roundFim,
+                'tempo_fim' => $tempoFim,
+            ]);
+
+            // No mesmo passo do encerramento: como a luta só encerra uma vez, o cartel só soma uma vez.
+            $this->atualizarCartel($luta, $metodo);
+        });
+
+        // Pontuação e ranking podem ser demorados: ficam para a fila.
+        ProcessarResultadoDaLuta::dispatch($luta);
     }
 
     public function cancelar(Luta $luta): void
@@ -110,7 +120,38 @@ final class AndamentoLuta
             'Só é possível cancelar lutas agendadas ou em andamento.',
         );
 
-        $luta->update(['status' => StatusLuta::Cancelada, 'em_intervalo' => false]);
+        DB::transaction(function () use ($luta): void {
+            $luta->update(['status' => StatusLuta::Cancelada, 'em_intervalo' => false]);
+
+            // Regra aprovada em 30/09/2026: luta cancelada descarta os palpites, sem pontuação.
+            $luta->descartarPalpites();
+        });
+    }
+
+    /**
+     * Soma o resultado ao cartel dos dois atletas. "Sem resultado" não altera o cartel.
+     */
+    private function atualizarCartel(Luta $luta, MetodoVitoria $metodo): void
+    {
+        $participantes = [$luta->participanteA, $luta->participanteB];
+
+        if ($metodo === MetodoVitoria::Empate) {
+            foreach ($participantes as $atleta) {
+                $atleta->registrarEmpate();
+            }
+
+            return;
+        }
+
+        if (! $metodo->temVencedor()) {
+            return;
+        }
+
+        foreach ($participantes as $atleta) {
+            $atleta->is($luta->vencedor)
+                ? $atleta->registrarVitoria($metodo)
+                : $atleta->registrarDerrota($metodo);
+        }
     }
 
     /**
