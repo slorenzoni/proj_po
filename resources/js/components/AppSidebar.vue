@@ -15,6 +15,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { adminNavFor } from '@/lib/adminNav';
 import { dashboard } from '@/routes';
 import { dashboard as adminDashboard } from '@/routes/admin';
 import type { NavItem } from '@/types';
@@ -38,6 +39,9 @@ const mainNavItems = computed<NavItem[]>(() => [
           ]
         : []),
 ]);
+
+// Telas do painel que o nível do administrador acessa (vazio para quem não é admin).
+const adminItems = computed(() => adminNavFor(page.props.auth.areasAdmin));
 
 const footerNavItems: NavItem[] = [
     {
@@ -69,6 +73,13 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain
+                v-if="adminItems.length > 0"
+                class="mt-4"
+                label="Administração"
+                :items="adminItems"
+                match-children
+            />
         </SidebarContent>
 
         <SidebarFooter>

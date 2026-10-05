@@ -42,6 +42,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
                 // Só controla a exibição do menu; a autorização real é o gate "acessar-admin".
                 'isAdministrador' => (bool) $request->user()?->isAdministrador(),
+                // Áreas do painel que o nível do administrador enxerga; a autorização real são os gates "admin.*".
+                'areasAdmin' => array_column($request->user()?->perfilAdministrador?->nivel_acesso->areas() ?? [], 'value'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

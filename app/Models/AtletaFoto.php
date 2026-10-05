@@ -34,6 +34,11 @@ class AtletaFoto extends Model
     use Auditable, HasFactory, HasPublicUuid, SoftDeletes;
 
     /**
+     * Máximo de fotos ativas por atleta (uma por posição em "ordem").
+     */
+    public const LIMITE_POR_ATLETA = 3;
+
+    /**
      * @return BelongsTo<Atleta, $this>
      */
     public function atleta(): BelongsTo

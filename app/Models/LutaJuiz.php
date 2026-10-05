@@ -6,6 +6,7 @@ use App\Concerns\Auditable;
 use App\Concerns\HasPublicUuid;
 use App\Enums\FuncaoJuiz;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -36,6 +37,14 @@ class LutaJuiz extends Pivot
      * @var bool
      */
     public $incrementing = true;
+
+    /**
+     * @return BelongsTo<Juiz, $this>
+     */
+    public function juiz(): BelongsTo
+    {
+        return $this->belongsTo(Juiz::class);
+    }
 
     /**
      * @return array<string, string>

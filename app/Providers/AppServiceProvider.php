@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\AreaAdmin;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Schema\Blueprint;
@@ -70,6 +71,10 @@ class AppServiceProvider extends ServiceProvider
     protected function registerGates(): void
     {
         Gate::define('acessar-admin', fn (User $user): bool => $user->isAdministrador());
+
+        foreach (AreaAdmin::cases() as $area) {
+            Gate::define($area->gate(), fn (User $user): bool => $user->podeAcessarArea($area));
+        }
     }
 
     /**

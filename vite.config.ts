@@ -71,6 +71,8 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
+            // Documentos do projeto: a documentação original do cliente não pode ser alterada.
+            '*.md',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],

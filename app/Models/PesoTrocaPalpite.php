@@ -39,6 +39,22 @@ class PesoTrocaPalpite extends Model
     use Auditable, HasFactory, HasPublicUuid, SoftDeletes;
 
     /**
+     * Durações de luta que têm grade de pesos.
+     */
+    public const NUMEROS_DE_ROUNDS = [3, 5];
+
+    /**
+     * Momentos em que o palpite pode ser trocado numa luta com esse número de rounds:
+     * 0 (pré-luta) e o intervalo após cada round, menos o último.
+     *
+     * @return list<int>
+     */
+    public static function momentosDaTroca(int $numeroRounds): array
+    {
+        return $numeroRounds < 1 ? [] : range(0, $numeroRounds - 1);
+    }
+
+    /**
      * Grade de pesos que vale para a categoria numa luta com esse número de rounds:
      * a específica dela, ou o padrão geral se não houver.
      *

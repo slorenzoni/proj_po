@@ -39,6 +39,14 @@ class AtletaEstilo extends Pivot
     public $incrementing = true;
 
     /**
+     * @return BelongsTo<EstiloDeLuta, $this>
+     */
+    public function estilo(): BelongsTo
+    {
+        return $this->belongsTo(EstiloDeLuta::class, 'estilo_id');
+    }
+
+    /**
      * @return BelongsTo<Treinador, $this>
      */
     public function treinador(): BelongsTo

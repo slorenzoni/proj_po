@@ -420,6 +420,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 | 11 | Plano Free | Gera registro em `assinaturas` (plano Free, valor 0, `gateway` e `proxima_cobranca` nulos), criado automaticamente no cadastro do cliente. |
 | 12 | Idioma | Interface 100% em português do Brasil (`APP_LOCALE=pt_BR`). Traduções do back-end em `lang/pt_BR`; textos do front-end escritos direto nos componentes Vue, sem biblioteca de i18n. |
 | 13 | Configuração da pontuação | **Tabelas tipadas** (04/10/2026): `configuracoes_pontuacao` (pontos do palpite e prazo do placar dos fãs) e `pesos_troca_palpite` (peso por número de rounds e momento da troca). Em ambas, a linha sem categoria é o padrão geral e **uma categoria pode ter configuração própria**, que substitui o padrão por inteiro. Sem histórico de vigência: a alteração sobrescreve o valor, e os palpites já pontuados não mudam porque guardam peso e pontos próprios. |
+| 14 | Permissões do painel | **Por função** (04/10/2026). Cadastrador: cadastros básicos, atletas, eventos, lutas, luta ao vivo, placar oficial e patrocínio. Moderador: verificações de selo. Super-admin: tudo, e só ele acessa usuários, papéis, administradores e a configuração de pontuação. Implementado com um gate por área (`admin.cadastros`, `admin.verificacoes`, `admin.usuarios`, `admin.configuracoes`), definido em `NivelAcesso::areas()`. |
 
 **Consequências da decisão 5 a observar no desenvolvimento:**
 
@@ -438,7 +439,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 ### 8.4 Estado da implementação em 04/10/2026
 
-**Todas as 31 tabelas de negócio têm migration e model**, com `uuid`, `deleted_at` e colunas de auditoria. Telas e regras de negócio só existem para contas.
+**Todas as 31 tabelas de negócio têm migration e model**, com `uuid`, `deleted_at` e colunas de auditoria. O painel administrativo está completo; as telas do site (cliente e público) ainda não existem.
 
 | Área | Tabela | Model | Situação |
 |---|---|---|---|
@@ -447,32 +448,32 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 | Contas | `perfis_administrador` | `PerfilAdministrador` | Implementado |
 | Contas | `papeis` | `Papel` | Implementado |
 | Contas | `papel_user` | `UserPapel` | Implementado |
-| Cadastros | `organizacoes` | `Organizacao` | Tabela e model; sem CRUD |
-| Cadastros | `categorias` | `Categoria` | Tabela e model; sem CRUD |
-| Cadastros | `categorias_peso` | `CategoriaPeso` | Tabela e model; sem CRUD |
-| Cadastros | `estilos_luta` | `EstiloDeLuta` | Tabela e model; sem CRUD |
-| Cadastros | `treinadores` | `Treinador` | Tabela e model; sem CRUD |
-| Cadastros | `juizes` | `Juiz` | Tabela e model; sem CRUD |
-| Cadastros | `atletas` | `Atleta` | Tabela e model; sem CRUD |
-| Cadastros | `atleta_fotos` | `AtletaFoto` | Tabela e model; sem CRUD |
-| Cadastros | `atleta_estilos` | `AtletaEstilo` | Tabela e model; sem CRUD |
-| Eventos e lutas | `eventos` | `Evento` | Tabela e model; sem telas |
-| Eventos e lutas | `lutas` | `Luta` | Tabela e model; sem telas |
-| Eventos e lutas | `luta_juizes` | `LutaJuiz` | Tabela e model; sem telas |
-| Eventos e lutas | `placares` | `Placar` | Tabela e model; sem telas |
-| Participação | `palpites` | `Palpite` | Tabela e model; sem telas nem pontuação |
-| Participação | `palpite_historicos` | `PalpiteHistorico` | Tabela e model; sem telas |
-| Participação | `placar_fans` | `PlacarFan` | Tabela e model; sem telas |
-| Participação | `mensagens` | `Mensagem` | Tabela e model; sem telas |
-| Assinaturas | `assinaturas` | `Assinatura` | Tabela e model; sem gateway |
-| Assinaturas | `solicitacoes_verificacao` | `SolicitacaoVerificacao` | Tabela e model; sem telas |
-| Assinaturas | `assinaturas_verificacao` | `AssinaturaVerificacao` | Tabela e model; sem gateway |
-| Patrocínio | `patrocinadores` | `Patrocinador` | Tabela e model; sem telas |
-| Patrocínio | `banners` | `Banner` | Tabela e model; sem telas |
-| Patrocínio | `postagens` | `Postagem` | Tabela e model; sem telas |
-| Ranking | `rankings` | `Ranking` | Tabela e model; sem cálculo |
-| Configuração | `configuracoes_pontuacao` | `ConfiguracaoPontuacao` | Tabela, model e padrão geral semeado; sem tela |
-| Configuração | `pesos_troca_palpite` | `PesoTrocaPalpite` | Tabela, model e padrão geral semeado; sem tela |
+| Cadastros | `organizacoes` | `Organizacao` | Tela no painel admin |
+| Cadastros | `categorias` | `Categoria` | Tela no painel admin |
+| Cadastros | `categorias_peso` | `CategoriaPeso` | Tela no painel admin |
+| Cadastros | `estilos_luta` | `EstiloDeLuta` | Tela no painel admin |
+| Cadastros | `treinadores` | `Treinador` | Tela no painel admin |
+| Cadastros | `juizes` | `Juiz` | Tela no painel admin |
+| Cadastros | `atletas` | `Atleta` | Tela no painel admin |
+| Cadastros | `atleta_fotos` | `AtletaFoto` | Tela no painel admin |
+| Cadastros | `atleta_estilos` | `AtletaEstilo` | Tela no painel admin |
+| Eventos e lutas | `eventos` | `Evento` | Tela no painel admin |
+| Eventos e lutas | `lutas` | `Luta` | Tela no painel admin |
+| Eventos e lutas | `luta_juizes` | `LutaJuiz` | Tela no painel admin |
+| Eventos e lutas | `placares` | `Placar` | Tela no painel admin |
+| Participação | `palpites` | `Palpite` | Sem tela (site do cliente) nem pontuação |
+| Participação | `palpite_historicos` | `PalpiteHistorico` | Sem tela (site do cliente) |
+| Participação | `placar_fans` | `PlacarFan` | Sem tela (site do cliente) |
+| Participação | `mensagens` | `Mensagem` | Sem tela (site do cliente) |
+| Assinaturas | `assinaturas` | `Assinatura` | Sem tela (site do cliente) nem gateway |
+| Assinaturas | `solicitacoes_verificacao` | `SolicitacaoVerificacao` | Análise no painel admin; falta a tela de solicitação do cliente |
+| Assinaturas | `assinaturas_verificacao` | `AssinaturaVerificacao` | Sem tela (site do cliente) nem gateway |
+| Patrocínio | `patrocinadores` | `Patrocinador` | Tela no painel admin |
+| Patrocínio | `banners` | `Banner` | Tela no painel admin |
+| Patrocínio | `postagens` | `Postagem` | Tela no painel admin |
+| Ranking | `rankings` | `Ranking` | Sem tela nem cálculo |
+| Configuração | `configuracoes_pontuacao` | `ConfiguracaoPontuacao` | Tela no painel admin; padrão geral semeado |
+| Configuração | `pesos_troca_palpite` | `PesoTrocaPalpite` | Tela no painel admin; padrão geral semeado |
 
 **Diferenças em relação ao dicionário de dados nas tabelas criadas em 04/10/2026:**
 
@@ -483,14 +484,17 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 - `postagens.patrocinado`: recalculado pelo model a partir de `patrocinador_id`, como o cartel do atleta.
 - `rankings.referencia_id`: sem chave estrangeira, porque aponta para evento ou organização conforme o escopo.
 - Campos de status e tipo continuam `VARCHAR` no banco, com enums do PHP no model (`app/Enums`), como sugerido em 2.8.
-- Nenhum índice único de negócio (decisão 5): as regras "um palpite por usuário por luta", "um ponto por juiz por round" e "slug único" são validações da aplicação, ainda não escritas.
+- Nenhum índice único de negócio (decisão 5). Já validados na aplicação: nomes únicos nos cadastros, slug único da postagem, posição única no card, um placar por juiz por round, uma conta por treinador/atleta. Ainda não escrita: "um palpite por usuário por luta", que virá com a tela do palpite.
 
 **Demais pontos:**
 
-- A suíte tem 90 testes, todos passando no MySQL; Pint e Larastan sem erros.
+- A suíte tem 214 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
 - `ConfiguracaoPontuacaoSeeder` grava o padrão geral com os valores de partida da seção 6 (10/15/15/22 e as grades de 3 e 5 rounds). É idempotente e não sobrescreve o que o administrador já alterou.
 - Como o ranking geral soma pontos de todas as modalidades, uma categoria com pontuação própria entra nele com régua diferente das demais.
-- Painel administrativo em `/admin` (gate `acessar-admin`), ainda vazio. Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.
+- Painel administrativo em `/admin` (gate `acessar-admin`), com todas as áreas: cadastros básicos, atletas (fotos e estilos), eventos e card de lutas, andamento ao vivo e placar oficial, usuários e papéis, verificações, patrocínio (patrocinadores, banners, blog) e configuração de pontuação. Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.
+- O andamento da luta (`App\Services\AndamentoLuta`) só aceita as transições válidas: agendada → em andamento → intervalo → próximo round → encerrada, ou cancelada. Não há intervalo após o último round.
+- Registros em uso não podem ser excluídos pelo painel (ex.: organização com eventos, atleta com lutas, juiz com placar).
+- Arquivos enviados (logos, fotos, banners, capas) ficam no disco de mídia; o banco guarda só o caminho. O comprovante de verificação é baixado por rota protegida, nunca por URL pública.
 - Cadastro público cria o perfil de cliente e exige a confirmação de maioridade. A criação da assinatura Free no cadastro (decisão 11) ainda não foi implementada.
 
 ### 8.5 Pendências
@@ -502,3 +506,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 - Auditoria: só o último autor ou histórico completo.
 - Reavaliar chat pago e selo de verificado pago (ver 7.2).
 - Valores válidos de `atletas.tipo` e `atletas.stance`, hoje texto livre.
+- Encerrar a luta ainda não atualiza o cartel dos atletas, não pontua os palpites e não recalcula o ranking.
+- Aprovar uma solicitação de verificação só registra a análise; o selo (`users.verificado`) depende da cobrança, ainda sem gateway.
+- O conteúdo das postagens aceita HTML e não é higienizado ao gravar; precisa ser tratado antes de ser exibido no site público.
+- Não há tela para o administrador cadastrar papéis novos (hoje só o `PapelSeeder`).

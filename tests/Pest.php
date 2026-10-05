@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\NivelAcesso;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +49,12 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Usuário com perfil de administrador no nível informado (super-admin por padrão).
+ */
+function administrador(NivelAcesso $nivel = NivelAcesso::SuperAdmin): User
+{
+    return User::factory()->administrador($nivel)->create();
 }

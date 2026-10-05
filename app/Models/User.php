@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\Auditable;
 use App\Concerns\HasPublicUuid;
+use App\Enums\AreaAdmin;
 use App\Enums\PapelPadrao;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -101,6 +102,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdministrador(): bool
     {
         return $this->perfilAdministrador !== null;
+    }
+
+    /**
+     * O nível do perfil de administrador define quais áreas do painel o usuário acessa.
+     */
+    public function podeAcessarArea(AreaAdmin $area): bool
+    {
+        return in_array($area, $this->perfilAdministrador?->nivel_acesso->areas() ?? [], true);
     }
 
     public function isCliente(): bool

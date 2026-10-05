@@ -10,21 +10,32 @@ import {
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { NavItem } from '@/types';
 
-defineProps<{
-    items: NavItem[];
-}>();
+withDefaults(
+    defineProps<{
+        items: NavItem[];
+        label?: string;
+        /** Marca o item também nas subpáginas (ex.: /admin/atletas/novo). */
+        matchChildren?: boolean;
+    }>(),
+    {
+        label: 'Plataforma',
+        matchChildren: false,
+    },
+);
 
 const { isCurrentUrl } = useCurrentUrl();
 </script>
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
+        <SidebarGroupLabel>{{ label }}</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
                     as-child
-                    :is-active="isCurrentUrl(item.href)"
+                    :is-active="
+                        isCurrentUrl(item.href, undefined, matchChildren)
+                    "
                     :tooltip="item.title"
                 >
                     <Link :href="item.href">

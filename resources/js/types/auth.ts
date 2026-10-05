@@ -1,3 +1,5 @@
+import type { AreaAdmin } from './admin';
+
 export type User = {
     id: number;
     name: string;
@@ -13,6 +15,7 @@ export type User = {
 export type Auth = {
     user: User;
     isAdministrador: boolean;
+    areasAdmin: AreaAdmin[];
 };
 
 export type TwoFactorConfigContent = {
