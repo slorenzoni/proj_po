@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid, ShieldCheck } from '@lucide/vue';
+import {
+    BadgeCheck,
+    BookOpen,
+    CalendarDays,
+    FolderGit2,
+    LayoutGrid,
+    ShieldCheck,
+    Trophy,
+} from '@lucide/vue';
 import { computed } from 'vue';
+import EventoController from '@/actions/App/Http/Controllers/Site/EventoController';
+import RankingController from '@/actions/App/Http/Controllers/Site/RankingController';
+import SolicitacaoVerificacaoController from '@/actions/App/Http/Controllers/Site/SolicitacaoVerificacaoController';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -25,9 +36,24 @@ const page = usePage();
 // O item "Administração" só aparece para administradores; o acesso real é protegido no servidor.
 const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Painel',
+        title: 'Meus palpites',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Eventos',
+        href: EventoController.index(),
+        icon: CalendarDays,
+    },
+    {
+        title: 'Ranking',
+        href: RankingController.geral(),
+        icon: Trophy,
+    },
+    {
+        title: 'Selo de verificado',
+        href: SolicitacaoVerificacaoController.index(),
+        icon: BadgeCheck,
     },
     ...(page.props.auth.isAdministrador
         ? [

@@ -70,6 +70,23 @@ class Evento extends Model
     }
 
     /**
+     * Endereço para incorporar o vídeo na página, quando o link é de um vídeo ou
+     * transmissão do YouTube. Links de canal não podem ser incorporados: devolve nulo.
+     */
+    public function youtubeEmbedUrl(): ?string
+    {
+        $link = (string) $this->link_canal_youtube;
+
+        $encontrou = preg_match(
+            '~(?:youtube\.com/(?:watch\?(?:.*&)?v=|live/|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{11})~',
+            $link,
+            $partes,
+        );
+
+        return $encontrou === 1 ? 'https://www.youtube-nocookie.com/embed/'.$partes[1] : null;
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

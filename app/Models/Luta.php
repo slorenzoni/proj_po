@@ -39,6 +39,7 @@ use Illuminate\Support\Carbon;
  * @property StatusLuta $status
  * @property int|null $round_atual
  * @property bool $em_intervalo
+ * @property Carbon|null $round_encerrado_em Fim do último round encerrado.
  * @property int|null $vencedor_id
  * @property MetodoVitoria|null $metodo_vitoria
  * @property int|null $round_fim
@@ -62,6 +63,7 @@ use Illuminate\Support\Carbon;
     'status',
     'round_atual',
     'em_intervalo',
+    'round_encerrado_em',
     'vencedor_id',
     'metodo_vitoria',
     'round_fim',
@@ -161,6 +163,24 @@ class Luta extends Model
     }
 
     /**
+     * Último round que já terminou, ou nulo se nenhum terminou (ou a modalidade não tem rounds).
+     */
+    public function ultimoRoundEncerrado(): ?int
+    {
+        if ($this->numero_rounds === null || $this->round_atual === null) {
+            return null;
+        }
+
+        return match (true) {
+            $this->status === StatusLuta::Encerrada => $this->round_fim ?? $this->round_atual,
+            $this->status !== StatusLuta::EmAndamento => null,
+            $this->em_intervalo => $this->round_atual,
+            $this->round_atual > 1 => $this->round_atual - 1,
+            default => null,
+        };
+    }
+
+    /**
      * Descarta os palpites da luta (soft delete, mantendo o histórico). Usado quando a luta
      * é cancelada ou um atleta é substituído: os usuários precisam palpitar de novo.
      *
@@ -192,6 +212,7 @@ class Luta extends Model
             'chance_do_b' => 'decimal:2',
             'status' => StatusLuta::class,
             'em_intervalo' => 'boolean',
+            'round_encerrado_em' => 'datetime',
             'metodo_vitoria' => MetodoVitoria::class,
         ];
     }

@@ -86,3 +86,26 @@ test('the user page offers only the roles not yet assigned', function () {
             ->has('papeisDisponiveis', 1)
             ->where('papeisDisponiveis.0.value', $disponivel->id));
 });
+
+test('the plan of a client is set from the panel, keeping the history of subscriptions', function () {
+    $usuario = cliente();
+
+    $this->put(route('admin.usuarios.plano.update', $usuario), ['plano' => 'membro'])->assertSessionHasNoErrors();
+    $this->put(route('admin.usuarios.plano.update', $usuario), ['plano' => 'membro'])->assertSessionHasNoErrors();
+
+    expect($usuario->isMembro())->toBeTrue()
+        ->and($usuario->assinaturas()->count())->toBe(1);
+
+    $this->put(route('admin.usuarios.plano.update', $usuario), ['plano' => 'free'])->assertSessionHasNoErrors();
+
+    expect($usuario->isMembro())->toBeFalse()
+        ->and($usuario->assinaturas()->count())->toBe(2);
+});
+
+test('an account without a client profile cannot receive a plan', function () {
+    $usuario = User::factory()->create();
+
+    $this->put(route('admin.usuarios.plano.update', $usuario), ['plano' => 'membro']);
+
+    expect($usuario->assinaturas()->count())->toBe(0);
+});

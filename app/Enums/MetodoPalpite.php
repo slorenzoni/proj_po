@@ -19,6 +19,18 @@ enum MetodoPalpite: string
     case WazaAri = 'waza_ari';
     case Desclassificacao = 'desclassificacao';
 
+    /**
+     * Métodos que o usuário pode escolher: modalidades com rounds (MMA, Boxe) ou sem (Judô).
+     *
+     * @return list<self>
+     */
+    public static function paraModalidade(bool $usaRounds): array
+    {
+        return $usaRounds
+            ? [self::KoTko, self::Finalizacao, self::Decisao]
+            : [self::Ippon, self::WazaAri, self::Decisao, self::Desclassificacao];
+    }
+
     public function label(): string
     {
         return match ($this) {

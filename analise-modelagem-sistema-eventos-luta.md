@@ -439,7 +439,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 ### 8.4 Estado da implementação em 04/10/2026
 
-**Todas as 31 tabelas de negócio têm migration e model**, com `uuid`, `deleted_at` e colunas de auditoria. O painel administrativo está completo; as telas do site (cliente e público) ainda não existem.
+**Todas as 31 tabelas de negócio têm migration e model**, com `uuid`, `deleted_at` e colunas de auditoria. O painel administrativo e o site do cliente estão completos; falta o que depende de pagamento online.
 
 | Área | Tabela | Model | Situação |
 |---|---|---|---|
@@ -461,17 +461,17 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 | Eventos e lutas | `lutas` | `Luta` | Tela no painel admin |
 | Eventos e lutas | `luta_juizes` | `LutaJuiz` | Tela no painel admin |
 | Eventos e lutas | `placares` | `Placar` | Tela no painel admin |
-| Participação | `palpites` | `Palpite` | Sem tela (site do cliente) nem pontuação |
-| Participação | `palpite_historicos` | `PalpiteHistorico` | Sem tela (site do cliente) |
-| Participação | `placar_fans` | `PlacarFan` | Sem tela (site do cliente) |
-| Participação | `mensagens` | `Mensagem` | Sem tela (site do cliente) |
+| Participação | `palpites` | `Palpite` | Tela no site; pontuação implementada |
+| Participação | `palpite_historicos` | `PalpiteHistorico` | Tela no site |
+| Participação | `placar_fans` | `PlacarFan` | Tela no site |
+| Participação | `mensagens` | `Mensagem` | Tela no site |
 | Assinaturas | `assinaturas` | `Assinatura` | Sem tela (site do cliente) nem gateway |
-| Assinaturas | `solicitacoes_verificacao` | `SolicitacaoVerificacao` | Análise no painel admin; falta a tela de solicitação do cliente |
+| Assinaturas | `solicitacoes_verificacao` | `SolicitacaoVerificacao` | Solicitação no site e análise no painel admin |
 | Assinaturas | `assinaturas_verificacao` | `AssinaturaVerificacao` | Sem tela (site do cliente) nem gateway |
 | Patrocínio | `patrocinadores` | `Patrocinador` | Tela no painel admin |
 | Patrocínio | `banners` | `Banner` | Tela no painel admin |
 | Patrocínio | `postagens` | `Postagem` | Tela no painel admin |
-| Ranking | `rankings` | `Ranking` | Sem tela nem cálculo |
+| Ranking | `rankings` | `Ranking` | Tela no site; recalculado a cada luta encerrada |
 | Configuração | `configuracoes_pontuacao` | `ConfiguracaoPontuacao` | Tela no painel admin; padrão geral semeado |
 | Configuração | `pesos_troca_palpite` | `PesoTrocaPalpite` | Tela no painel admin; padrão geral semeado |
 
@@ -488,7 +488,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 **Demais pontos:**
 
-- A suíte tem 257 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
+- A suíte tem 324 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
 - `ConfiguracaoPontuacaoSeeder` grava o padrão geral com os valores de partida da seção 6 (10/15/15/22 e as grades de 3 e 5 rounds). É idempotente e não sobrescreve o que o administrador já alterou.
 - Como o ranking geral soma pontos de todas as modalidades, uma categoria com pontuação própria entra nele com régua diferente das demais.
 - Painel administrativo em `/admin` (gate `acessar-admin`), com todas as áreas: cadastros básicos, atletas (fotos e estilos), eventos e card de lutas, andamento ao vivo e placar oficial, usuários e papéis, verificações, patrocínio (patrocinadores, banners, blog) e configuração de pontuação. Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.
@@ -498,6 +498,13 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 - Cadastro público cria o perfil de cliente, exige a confirmação de maioridade e cria a assinatura Free (decisão 11).
 - **Ao encerrar uma luta** (05/10/2026): o cartel dos dois atletas é atualizado na hora; a pontuação dos palpites e os rankings geral, do evento e da organização são recalculados em fila (`ProcessarResultadoDaLuta`), o que exige um worker de fila rodando (`php artisan queue:work`).
 - **Pontuação do palpite** (`App\Services\Pontuacao`): segue a tabela da seção 6.1, multiplicada pelo `peso_aplicado` do palpite. Empate, sem resultado e desqualificação (em modalidades com rounds) dão zero para todos. O round só conta quando é igual ao `round_fim` informado no encerramento.
+- **Site do cliente** (05/10/2026): home, eventos, página da luta (vídeo do YouTube, palpite, placar dos fãs e comentários), perfil do atleta, rankings geral/por evento/por organização, blog, painel "Meus palpites" e solicitação do selo de verificado. As páginas públicas não exigem conta; palpitar, pontuar rounds e comentar exigem conta com e-mail confirmado.
+- **Janela do palpite** (`App\Services\Palpites\RegistradorDePalpite`): pré-luta para Free e Membro, com peso cheio; ao vivo só para Membro e só nos intervalos, com o peso do momento. Reenviar o mesmo palpite não conta como troca; qualquer troca num intervalo grava o peso daquele intervalo, mesmo voltando ao palpite original. Cada troca vai para `palpite_historicos`.
+- **Placar dos fãs** (`App\Services\PlacarDosFans`): qualquer cliente pontua o round que acabou de terminar, uma vez, dentro do prazo configurado, no sistema 10-point must. Para medir o prazo foi criada a coluna `lutas.round_encerrado_em`, que não estava no dicionário.
+- **Comentários:** Membro ativo, comentarista, atleta ou treinador com conta e administrador; papéis especiais aparecem com destaque. Limite de 500 caracteres e 10 comentários por minuto; a página mostra os 50 mais recentes.
+- **Blog:** o conteúdo é tratado como Markdown; HTML digitado aparece como texto e nunca é executado. Só postagens publicadas e com data até hoje são públicas.
+- **Banners:** exibidos nas posições Home, Evento, Luta, Chat e Blog quando ativos e dentro do período. Cada exibição conta uma impressão; o clique passa por uma rota que conta e redireciona ao link cadastrado.
+- **Plano Membro sem gateway:** o super-admin define o plano do cliente na tela do usuário, sem cobrança.
 - **Luta cancelada ou atleta substituído:** os palpites da luta são descartados (soft delete) e os usuários precisam palpitar de novo. Inverter os cantos (A ↔ B) não descarta.
 
 ### 8.5 Pendências
@@ -509,9 +516,13 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 - Cartel: desqualificação e os métodos do Judô (Ippon, Waza-ari, Golden Score) são somados em "decisão", porque o cartel só tem KO, submissão e decisão. Confirmar se é o desejado ou se o cartel precisa de mais detalhamentos.
 - Desclassificação no Judô pontua o palpite (decisão 7), enquanto a desqualificação nas modalidades com rounds dá zero para todos (seção 6.1). Confirmar se a diferença é intencional.
 - Corrigir o resultado de uma luta já encerrada: não há tela nem regra para desfazer o cartel e repontuar.
+- Posição de banner "Categoria": pode ser cadastrada, mas o site não tem página de categoria para exibi-la.
+- Impressões de banner contam toda exibição, inclusive recarregamentos e robôs.
+- Membro sem palpite pode dar o primeiro palpite num intervalo, já com o peso reduzido. Confirmar se é o desejado.
+- Assinatura do plano Membro e cobrança do selo pelo próprio cliente: dependem do gateway de pagamento.
+- Moderação de comentários (excluir ou ocultar) pelo painel.
 - Auditoria: só o último autor ou histórico completo.
 - Reavaliar chat pago e selo de verificado pago (ver 7.2).
 - Valores válidos de `atletas.tipo` e `atletas.stance`, hoje texto livre.
 - Aprovar uma solicitação de verificação só registra a análise; o selo (`users.verificado`) depende da cobrança, ainda sem gateway.
-- O conteúdo das postagens aceita HTML e não é higienizado ao gravar; precisa ser tratado antes de ser exibido no site público.
 - Não há tela para o administrador cadastrar papéis novos (hoje só o `PapelSeeder`).

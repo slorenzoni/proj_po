@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\NivelAcesso;
+use App\Enums\PlanoAssinatura;
 use App\Models\Papel;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -55,6 +56,7 @@ class UsuarioController extends AdminController
                 'email_verificado' => $usuario->email_verified_at !== null,
                 'cliente' => $usuario->isCliente(),
                 'nivel_acesso' => $usuario->perfilAdministrador?->nivel_acesso->value,
+                'plano' => $usuario->plano()->value,
                 'criado_em' => $usuario->created_at?->toIso8601String(),
                 'papeis' => $usuario->papeis->map(fn (Papel $papel): array => [
                     'uuid' => $papel->uuid,
@@ -68,6 +70,7 @@ class UsuarioController extends AdminController
                 ->get(['id', 'nome'])
                 ->map(fn (Papel $papel): array => ['value' => $papel->id, 'label' => $papel->nome]),
             'niveis' => NivelAcesso::opcoes(),
+            'planos' => PlanoAssinatura::opcoes(),
         ]);
     }
 
@@ -89,6 +92,31 @@ class UsuarioController extends AdminController
         $usuario->removerPapel($papel);
 
         $this->sucesso('Papel removido.');
+
+        return back();
+    }
+
+    /**
+     * Define o plano do cliente pelo painel. Existe porque ainda não há gateway de
+     * pagamento: a assinatura criada aqui não gera cobrança.
+     */
+    public function definirPlano(Request $request, User $usuario): RedirectResponse
+    {
+        $dados = $request->validate(['plano' => ['required', Rule::enum(PlanoAssinatura::class)]]);
+
+        if (! $usuario->isCliente()) {
+            $this->erro('Só contas de cliente têm plano.');
+
+            return back();
+        }
+
+        $plano = PlanoAssinatura::from($dados['plano']);
+
+        if ($usuario->plano() !== $plano) {
+            $usuario->trocarPlano($plano);
+        }
+
+        $this->sucesso("Plano definido como {$plano->label()}.");
 
         return back();
     }

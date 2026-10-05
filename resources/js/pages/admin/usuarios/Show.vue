@@ -19,6 +19,7 @@ type Usuario = {
     email_verificado: boolean;
     cliente: boolean;
     nivel_acesso: string | null;
+    plano: string;
     criado_em: string | null;
     papeis: { uuid: string; nome: string }[];
 };
@@ -28,6 +29,7 @@ defineProps<{
     ehProprioUsuario: boolean;
     papeisDisponiveis: Opcao[];
     niveis: Opcao[];
+    planos: Opcao[];
 }>();
 
 defineOptions({
@@ -57,6 +59,41 @@ defineOptions({
         <p class="-mt-4 text-sm text-muted-foreground">
             Conta criada em {{ formatarDataHora(usuario.criado_em) }}.
         </p>
+
+        <section v-if="usuario.cliente" class="max-w-xl space-y-4">
+            <header class="space-y-0.5">
+                <h2 class="text-base font-medium">Plano</h2>
+                <p class="text-sm text-muted-foreground">
+                    Enquanto não há pagamento online, o plano Membro é concedido
+                    por aqui, sem cobrança.
+                </p>
+            </header>
+
+            <Form
+                v-bind="UsuarioController.definirPlano.form(usuario.uuid)"
+                :options="{ preserveScroll: true }"
+                class="flex flex-wrap items-end gap-2"
+                v-slot="{ errors, processing }"
+            >
+                <FormField
+                    label="Plano do cliente"
+                    for="plano"
+                    :error="errors.plano"
+                    class="min-w-56 flex-1"
+                >
+                    <SelectInput
+                        id="plano"
+                        name="plano"
+                        :options="planos"
+                        :default-value="usuario.plano"
+                        required
+                    />
+                </FormField>
+                <Button type="submit" :disabled="processing">
+                    Definir plano
+                </Button>
+            </Form>
+        </section>
 
         <section class="max-w-xl space-y-4">
             <header class="space-y-0.5">

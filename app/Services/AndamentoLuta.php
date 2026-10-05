@@ -60,7 +60,7 @@ final class AndamentoLuta
             'Não há round em andamento para encerrar. Após o último round, encerre a luta.',
         );
 
-        $luta->update(['em_intervalo' => true]);
+        $luta->update(['em_intervalo' => true, 'round_encerrado_em' => now()]);
     }
 
     public function iniciarProximoRound(Luta $luta): void
@@ -99,6 +99,7 @@ final class AndamentoLuta
             $luta->update([
                 'status' => StatusLuta::Encerrada,
                 'em_intervalo' => false,
+                'round_encerrado_em' => now(),
                 'vencedor_id' => $metodo->temVencedor() ? $vencedor?->id : null,
                 'metodo_vitoria' => $metodo,
                 'round_fim' => $roundFim,

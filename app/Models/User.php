@@ -6,6 +6,8 @@ use App\Concerns\Auditable;
 use App\Concerns\HasPublicUuid;
 use App\Enums\AreaAdmin;
 use App\Enums\PapelPadrao;
+use App\Enums\PlanoAssinatura;
+use App\Enums\StatusAssinatura;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
@@ -83,6 +86,26 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Cadastro de treinador ligado a esta conta, se houver.
+     *
+     * @return HasOne<Treinador, $this>
+     */
+    public function treinador(): HasOne
+    {
+        return $this->hasOne(Treinador::class);
+    }
+
+    /**
+     * Cadastro de atleta ligado a esta conta, se houver.
+     *
+     * @return HasOne<Atleta, $this>
+     */
+    public function atleta(): HasOne
+    {
+        return $this->hasOne(Atleta::class);
+    }
+
+    /**
      * Papéis "só-permissão" ativos (pivots com soft delete são ignorados).
      *
      * @return BelongsToMany<Papel, $this, UserPapel>
@@ -110,6 +133,69 @@ class User extends Authenticatable implements MustVerifyEmail
     public function podeAcessarArea(AreaAdmin $area): bool
     {
         return in_array($area, $this->perfilAdministrador?->nivel_acesso->areas() ?? [], true);
+    }
+
+    /**
+     * Plano da assinatura ativa; quem não tem assinatura ativa é tratado como Free.
+     */
+    public function plano(): PlanoAssinatura
+    {
+        $assinatura = $this->assinaturas()
+            ->where('status', StatusAssinatura::Ativa)
+            ->latest('id')
+            ->first();
+
+        return $assinatura->plano ?? PlanoAssinatura::Free;
+    }
+
+    public function isMembro(): bool
+    {
+        return $this->plano() === PlanoAssinatura::Membro;
+    }
+
+    /**
+     * Troca o plano: cancela a assinatura ativa e abre outra. Usado pelo painel enquanto
+     * não há gateway de pagamento (a assinatura criada não gera cobrança).
+     */
+    public function trocarPlano(PlanoAssinatura $plano): void
+    {
+        DB::transaction(function () use ($plano): void {
+            $this->assinaturas()
+                ->where('status', StatusAssinatura::Ativa)
+                ->get()
+                ->each(fn (Assinatura $assinatura) => $assinatura->update(['status' => StatusAssinatura::Cancelada]));
+
+            $this->assinaturas()->create([
+                'plano' => $plano,
+                'status' => StatusAssinatura::Ativa,
+                'valor' => 0,
+                'data_inicio' => now()->toDateString(),
+            ]);
+        });
+    }
+
+    /**
+     * Destaque exibido ao lado dos comentários de quem tem um papel especial (decisão de
+     * 01/10/2026). Nulo para o cliente comum.
+     */
+    public function destaqueNosComentarios(): ?string
+    {
+        return match (true) {
+            $this->isAdministrador() => 'Administrador',
+            $this->hasPapel(Papel::COMENTARISTA) => Papel::COMENTARISTA,
+            $this->atleta !== null => 'Atleta',
+            $this->treinador !== null => 'Treinador',
+            default => null,
+        };
+    }
+
+    /**
+     * Comentam: Membro ativo e os papéis especiais (comentarista, atleta ou treinador com
+     * conta, administrador).
+     */
+    public function podeComentar(): bool
+    {
+        return $this->destaqueNosComentarios() !== null || $this->isMembro();
     }
 
     public function isCliente(): bool

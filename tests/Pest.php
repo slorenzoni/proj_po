@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\NivelAcesso;
+use App\Models\Assinatura;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -57,4 +58,24 @@ function something()
 function administrador(NivelAcesso $nivel = NivelAcesso::SuperAdmin): User
 {
     return User::factory()->administrador($nivel)->create();
+}
+
+/**
+ * Usuário com perfil de cliente e sem assinatura paga (plano Free).
+ */
+function cliente(): User
+{
+    return User::factory()->cliente()->create();
+}
+
+/**
+ * Cliente com assinatura ativa do plano Membro.
+ */
+function membro(): User
+{
+    $user = cliente();
+
+    Assinatura::factory()->membro()->for($user)->create();
+
+    return $user;
 }

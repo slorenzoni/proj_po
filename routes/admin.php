@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verified', 'can:acessar-admin'])
             Route::get('usuarios/{usuario}', [UsuarioController::class, 'show'])->name('usuarios.show');
             Route::post('usuarios/{usuario}/papeis', [UsuarioController::class, 'atribuirPapel'])->name('usuarios.papeis.store');
             Route::delete('usuarios/{usuario}/papeis/{papel}', [UsuarioController::class, 'removerPapel'])->name('usuarios.papeis.destroy');
+            Route::put('usuarios/{usuario}/plano', [UsuarioController::class, 'definirPlano'])->name('usuarios.plano.update');
             Route::put('usuarios/{usuario}/administrador', [UsuarioController::class, 'definirAdministrador'])->name('usuarios.administrador.update');
             Route::delete('usuarios/{usuario}/administrador', [UsuarioController::class, 'revogarAdministrador'])->name('usuarios.administrador.destroy');
         });

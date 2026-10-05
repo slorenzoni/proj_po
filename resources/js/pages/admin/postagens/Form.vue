@@ -91,7 +91,7 @@ defineOptions({
                 for="conteudo"
                 :error="errors.conteudo"
                 required
-                hint="Aceita HTML ou Markdown."
+                hint="Escreva em Markdown. HTML digitado aparece como texto no site."
                 class="sm:col-span-2"
             >
                 <TextArea
