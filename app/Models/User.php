@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -62,6 +63,22 @@ class User extends Authenticatable implements MustVerifyEmail
     public function perfilAdministrador(): HasOne
     {
         return $this->hasOne(PerfilAdministrador::class);
+    }
+
+    /**
+     * @return HasMany<Assinatura, $this>
+     */
+    public function assinaturas(): HasMany
+    {
+        return $this->hasMany(Assinatura::class);
+    }
+
+    /**
+     * @return HasMany<Palpite, $this>
+     */
+    public function palpites(): HasMany
+    {
+        return $this->hasMany(Palpite::class);
     }
 
     /**

@@ -263,7 +263,7 @@ Sugestão: **backed enums do PHP 8.4** com cast no model (`Evento.status`, `Luta
 
 **Impacto no modelo:**
 
-- **Nova tabela `PlacarFa`**: `luta_id`, `user_id`, `round`, `pontos_atleta_a`, `pontos_atleta_b` + `UNIQUE(luta_id, user_id, round)`.
+- **Nova tabela `PlacarFan`**: `luta_id`, `user_id`, `round`, `pontos_atleta_a`, `pontos_atleta_b` + `UNIQUE(luta_id, user_id, round)`.
 - Validação: um dos lados = 10; o outro entre 7 e 10.
 - A média pode ser calculada sob demanda ou mantida em cache/tabela agregada para exibição ao vivo.
 
@@ -296,7 +296,7 @@ Sugestão: **backed enums do PHP 8.4** com cast no model (`Evento.status`, `Luta
 | `Palpite` | + `metodo_escolhido`, `round_escolhido`, `pontos_obtidos`, `round_da_troca`, `peso_aplicado` |
 | `Luta` | + `round_atual`, `em_intervalo` |
 | `PalpiteHistorico` | **Nova** |
-| `PlacarFa` | **Nova** |
+| `PlacarFan` | **Nova** |
 | `Ranking` | **Nova** |
 | Configuração | Pontos (6.1), pesos (6.2), prazo do placar dos fãs (6.3) |
 
@@ -348,7 +348,7 @@ Reforça os pontos **3.3** (juízes por luta) e **3.9** (ranking do atleta) e in
 
 ### 7.4 Judô
 
-Pelas regras da IJF, o Judô **não tem rounds nem 10-point must**: usa ippon, waza-ari, yuko (reintroduzido em 2025) e shido; penalidades só decidem a luta em caso de hansoku-make. Confirma o ponto **3.2**: `Luta`, `Placar`, palpite por método/round e `PlacarFa` precisam variar por modalidade — ou o Judô fica fora do escopo inicial.
+Pelas regras da IJF, o Judô **não tem rounds nem 10-point must**: usa ippon, waza-ari, yuko (reintroduzido em 2025) e shido; penalidades só decidem a luta em caso de hansoku-make. Confirma o ponto **3.2**: `Luta`, `Placar`, palpite por método/round e `PlacarFan` precisam variar por modalidade — ou o Judô fica fora do escopo inicial.
 
 ### 7.5 Aspecto legal no Brasil (não é parecer jurídico)
 
@@ -419,6 +419,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 | 10 | Quem comenta | Membro ativo, papel Comentarista, Treinador ou Atleta com conta, e Administrador. Papéis especiais têm destaque visual. |
 | 11 | Plano Free | Gera registro em `assinaturas` (plano Free, valor 0, `gateway` e `proxima_cobranca` nulos), criado automaticamente no cadastro do cliente. |
 | 12 | Idioma | Interface 100% em português do Brasil (`APP_LOCALE=pt_BR`). Traduções do back-end em `lang/pt_BR`; textos do front-end escritos direto nos componentes Vue, sem biblioteca de i18n. |
+| 13 | Configuração da pontuação | **Tabelas tipadas** (04/10/2026): `configuracoes_pontuacao` (pontos do palpite e prazo do placar dos fãs) e `pesos_troca_palpite` (peso por número de rounds e momento da troca). Em ambas, a linha sem categoria é o padrão geral e **uma categoria pode ter configuração própria**, que substitui o padrão por inteiro. Sem histórico de vigência: a alteração sobrescreve o valor, e os palpites já pontuados não mudam porque guardam peso e pontos próprios. |
 
 **Consequências da decisão 5 a observar no desenvolvimento:**
 
@@ -437,34 +438,66 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 ### 8.4 Estado da implementação em 04/10/2026
 
-| Tabela | Model | Situação |
-|---|---|---|
-| `users` | `User` | Implementado |
-| `perfis_cliente` | `PerfilCliente` | Implementado |
-| `perfis_administrador` | `PerfilAdministrador` | Implementado |
-| `papeis` | `Papel` | Implementado |
-| `papel_user` | `UserPapel` | Implementado |
-| `organizacoes` | `Organizacao` | Tabela e model; sem CRUD |
-| `categorias` | `Categoria` | Tabela e model; sem CRUD |
-| `categorias_peso` | `CategoriaPeso` | Tabela e model; sem CRUD |
-| `estilos_luta` | `EstiloDeLuta` | Tabela e model; sem CRUD |
-| `treinadores` | `Treinador` | Tabela e model; sem CRUD |
-| `juizes` | `Juiz` | Tabela e model; sem CRUD |
-| `atletas` | `Atleta` | Tabela e model; sem CRUD |
-| `atleta_fotos` | `AtletaFoto` | Tabela e model; sem CRUD |
-| `atleta_estilos` | `AtletaEstilo` | Tabela e model; sem CRUD |
+**Todas as 31 tabelas de negócio têm migration e model**, com `uuid`, `deleted_at` e colunas de auditoria. Telas e regras de negócio só existem para contas.
 
-- Todas as 14 tabelas têm `uuid`, `deleted_at` e as colunas de auditoria.
-- A suíte tem 68 testes, todos passando no MySQL; Pint e Larastan sem erros.
-- Painel administrativo em `/admin` (gate `acessar-admin`). Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.
-- Cadastro público cria o perfil de cliente e exige a confirmação de maioridade.
-- **Ainda sem migration e sem model:** eventos, lutas, `luta_juizes`, placar, placar dos fãs, palpites e seu histórico, mensagens, assinaturas, verificação, patrocinadores, banners, postagens e ranking.
+| Área | Tabela | Model | Situação |
+|---|---|---|---|
+| Contas | `users` | `User` | Implementado (login, cadastro, perfil, 2FA) |
+| Contas | `perfis_cliente` | `PerfilCliente` | Implementado |
+| Contas | `perfis_administrador` | `PerfilAdministrador` | Implementado |
+| Contas | `papeis` | `Papel` | Implementado |
+| Contas | `papel_user` | `UserPapel` | Implementado |
+| Cadastros | `organizacoes` | `Organizacao` | Tabela e model; sem CRUD |
+| Cadastros | `categorias` | `Categoria` | Tabela e model; sem CRUD |
+| Cadastros | `categorias_peso` | `CategoriaPeso` | Tabela e model; sem CRUD |
+| Cadastros | `estilos_luta` | `EstiloDeLuta` | Tabela e model; sem CRUD |
+| Cadastros | `treinadores` | `Treinador` | Tabela e model; sem CRUD |
+| Cadastros | `juizes` | `Juiz` | Tabela e model; sem CRUD |
+| Cadastros | `atletas` | `Atleta` | Tabela e model; sem CRUD |
+| Cadastros | `atleta_fotos` | `AtletaFoto` | Tabela e model; sem CRUD |
+| Cadastros | `atleta_estilos` | `AtletaEstilo` | Tabela e model; sem CRUD |
+| Eventos e lutas | `eventos` | `Evento` | Tabela e model; sem telas |
+| Eventos e lutas | `lutas` | `Luta` | Tabela e model; sem telas |
+| Eventos e lutas | `luta_juizes` | `LutaJuiz` | Tabela e model; sem telas |
+| Eventos e lutas | `placares` | `Placar` | Tabela e model; sem telas |
+| Participação | `palpites` | `Palpite` | Tabela e model; sem telas nem pontuação |
+| Participação | `palpite_historicos` | `PalpiteHistorico` | Tabela e model; sem telas |
+| Participação | `placar_fans` | `PlacarFan` | Tabela e model; sem telas |
+| Participação | `mensagens` | `Mensagem` | Tabela e model; sem telas |
+| Assinaturas | `assinaturas` | `Assinatura` | Tabela e model; sem gateway |
+| Assinaturas | `solicitacoes_verificacao` | `SolicitacaoVerificacao` | Tabela e model; sem telas |
+| Assinaturas | `assinaturas_verificacao` | `AssinaturaVerificacao` | Tabela e model; sem gateway |
+| Patrocínio | `patrocinadores` | `Patrocinador` | Tabela e model; sem telas |
+| Patrocínio | `banners` | `Banner` | Tabela e model; sem telas |
+| Patrocínio | `postagens` | `Postagem` | Tabela e model; sem telas |
+| Ranking | `rankings` | `Ranking` | Tabela e model; sem cálculo |
+| Configuração | `configuracoes_pontuacao` | `ConfiguracaoPontuacao` | Tabela, model e padrão geral semeado; sem tela |
+| Configuração | `pesos_troca_palpite` | `PesoTrocaPalpite` | Tabela, model e padrão geral semeado; sem tela |
+
+**Diferenças em relação ao dicionário de dados nas tabelas criadas em 04/10/2026:**
+
+- `placar_fans`: nome definido por Sandro em 04/10/2026 (a análise chamava de `PlacarFa`).
+- `lutas`: sem `juiz_id` (decisão 6); com `round_atual` e `em_intervalo` (decisão 9); `numero_rounds` aceita nulo para modalidades sem rounds (decisão 7); status ganhou `cancelada` (seção 6.2).
+- `palpites`: com `metodo_escolhido`, `round_escolhido`, `round_da_troca`, `peso_aplicado` e `pontos_obtidos` (seção 6); sem `trocas_de_opiniao`, que passou a ser derivável de `palpite_historicos`.
+- `assinaturas`: `periodicidade`, `gateway` e `proxima_cobranca` aceitam nulo, por causa do plano Free (decisão 11).
+- `postagens.patrocinado`: recalculado pelo model a partir de `patrocinador_id`, como o cartel do atleta.
+- `rankings.referencia_id`: sem chave estrangeira, porque aponta para evento ou organização conforme o escopo.
+- Campos de status e tipo continuam `VARCHAR` no banco, com enums do PHP no model (`app/Enums`), como sugerido em 2.8.
+- Nenhum índice único de negócio (decisão 5): as regras "um palpite por usuário por luta", "um ponto por juiz por round" e "slug único" são validações da aplicação, ainda não escritas.
+
+**Demais pontos:**
+
+- A suíte tem 90 testes, todos passando no MySQL; Pint e Larastan sem erros.
+- `ConfiguracaoPontuacaoSeeder` grava o padrão geral com os valores de partida da seção 6 (10/15/15/22 e as grades de 3 e 5 rounds). É idempotente e não sobrescreve o que o administrador já alterou.
+- Como o ranking geral soma pontos de todas as modalidades, uma categoria com pontuação própria entra nele com régua diferente das demais.
+- Painel administrativo em `/admin` (gate `acessar-admin`), ainda vazio. Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.
+- Cadastro público cria o perfil de cliente e exige a confirmação de maioridade. A criação da assinatura Free no cadastro (decisão 11) ainda não foi implementada.
 
 ### 8.5 Pendências
 
 - Gateway de pagamento.
 - Ranking geral: histórico completo ou janela móvel.
-- Prazo de pontuação do placar dos fãs.
+- Prazo de pontuação do placar dos fãs: o padrão semeado é de 5 minutos, valor provisório ainda não confirmado.
 - Critérios de desempate do ranking.
 - Auditoria: só o último autor ou histórico completo.
 - Reavaliar chat pago e selo de verificado pago (ver 7.2).

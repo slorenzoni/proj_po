@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(PapelSeeder::class);
+        $this->call(ConfiguracaoPontuacaoSeeder::class);
 
         // Usuário de desenvolvimento com os dois perfis (cliente + super-admin).
         User::factory()

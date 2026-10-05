@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -30,4 +31,12 @@ class Organizacao extends Model
 {
     /** @use HasFactory<OrganizacaoFactory> */
     use Auditable, HasFactory, HasPublicUuid, SoftDeletes;
+
+    /**
+     * @return HasMany<Evento, $this>
+     */
+    public function eventos(): HasMany
+    {
+        return $this->hasMany(Evento::class);
+    }
 }
