@@ -5,10 +5,8 @@ use App\Enums\NivelAcesso;
 use App\Enums\PosicaoBanner;
 use App\Enums\StatusBanner;
 use App\Enums\StatusPatrocinador;
-use App\Enums\StatusPostagem;
 use App\Models\Banner;
 use App\Models\Patrocinador;
-use App\Models\Postagem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -90,56 +88,4 @@ test('a banner display period cannot end before it starts', function () {
         'imagem' => UploadedFile::fake()->image('peca.jpg'),
         'data_fim' => '2026-10-01',
     ]))->assertSessionHasErrors('data_fim');
-});
-
-test('a post gets its address from the title and the logged administrator as author', function () {
-    $this->post(route('admin.postagens.store'), [
-        'titulo' => 'Aldo anuncia aposentadoria',
-        'conteudo' => 'Texto da matéria.',
-        'status' => StatusPostagem::Rascunho->value,
-    ])->assertSessionHasNoErrors();
-
-    expect(Postagem::query()->sole())
-        ->slug->toBe('aldo-anuncia-aposentadoria')
-        ->user_id->toBe($this->admin->id)
-        ->data_publicacao->toBeNull()
-        ->patrocinado->toBeFalse();
-});
-
-test('publishing a post without a date uses today', function () {
-    $this->post(route('admin.postagens.store'), [
-        'titulo' => 'Card completo do UFC 300',
-        'conteudo' => 'Texto da matéria.',
-        'status' => StatusPostagem::Publicado->value,
-    ])->assertSessionHasNoErrors();
-
-    expect(Postagem::query()->sole()->data_publicacao->isToday())->toBeTrue();
-});
-
-test('a post address must be unique, even when typed differently', function () {
-    Postagem::factory()->create(['slug' => 'card-completo']);
-
-    $this->post(route('admin.postagens.store'), [
-        'titulo' => 'Outro título',
-        'slug' => 'Card Completo',
-        'conteudo' => 'Texto.',
-        'status' => StatusPostagem::Rascunho->value,
-    ])->assertSessionHasErrors('slug');
-});
-
-test('linking a sponsor on update flags the post as sponsored and keeps its author', function () {
-    $postagem = Postagem::factory()->create();
-    $patrocinador = Patrocinador::factory()->create();
-
-    $this->put(route('admin.postagens.update', $postagem), [
-        'titulo' => $postagem->titulo,
-        'slug' => $postagem->slug,
-        'conteudo' => $postagem->conteudo,
-        'status' => StatusPostagem::Rascunho->value,
-        'patrocinador_id' => $patrocinador->id,
-    ])->assertSessionHasNoErrors();
-
-    expect($postagem->refresh())
-        ->patrocinado->toBeTrue()
-        ->user_id->toBe($postagem->user_id);
 });

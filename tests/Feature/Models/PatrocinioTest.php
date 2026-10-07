@@ -3,25 +3,7 @@
 use App\Enums\EscopoRanking;
 use App\Enums\PosicaoBanner;
 use App\Models\Banner;
-use App\Models\Patrocinador;
-use App\Models\Postagem;
 use App\Models\Ranking;
-
-test('a post is flagged as sponsored only while it has a sponsor', function () {
-    $patrocinador = Patrocinador::factory()->create();
-    $postagem = Postagem::factory()->create();
-
-    expect($postagem->patrocinado)->toBeFalse();
-
-    $postagem->update(['patrocinador_id' => $patrocinador->id]);
-
-    expect($postagem->refresh()->patrocinado)->toBeTrue()
-        ->and($patrocinador->postagens->sole()->is($postagem))->toBeTrue();
-
-    $postagem->update(['patrocinador_id' => null]);
-
-    expect($postagem->refresh()->patrocinado)->toBeFalse();
-});
 
 test('a banner starts without metrics and belongs to its sponsor', function () {
     $banner = Banner::factory()->create()->refresh();

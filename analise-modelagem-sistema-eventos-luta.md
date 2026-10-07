@@ -421,6 +421,8 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 | 12 | Idioma | Interface 100% em português do Brasil (`APP_LOCALE=pt_BR`). Traduções do back-end em `lang/pt_BR`; textos do front-end escritos direto nos componentes Vue, sem biblioteca de i18n. |
 | 13 | Configuração da pontuação | **Tabelas tipadas** (04/10/2026): `configuracoes_pontuacao` (pontos do palpite e prazo do placar dos fãs) e `pesos_troca_palpite` (peso por número de rounds e momento da troca). Em ambas, a linha sem categoria é o padrão geral e **uma categoria pode ter configuração própria**, que substitui o padrão por inteiro. Sem histórico de vigência: a alteração sobrescreve o valor, e os palpites já pontuados não mudam porque guardam peso e pontos próprios. |
 | 14 | Permissões do painel | **Por função** (04/10/2026). Cadastrador: cadastros básicos, atletas, eventos, lutas, luta ao vivo, placar oficial e patrocínio. Moderador: verificações de selo. Super-admin: tudo, e só ele acessa usuários, papéis, administradores e a configuração de pontuação. Implementado com um gate por área (`admin.cadastros`, `admin.verificacoes`, `admin.usuarios`, `admin.configuracoes`), definido em `NivelAcesso::areas()`. |
+| 15 | Dicas e selo de verificado | **Clube exclusivo** (06/10/2026). Nova tabela `dicas` (texto livre por luta). Qualquer pessoa vê as dicas; só escrevem comentaristas e Membros com selo de verificado. O selo só pode ser pedido por quem já é Membro e exige identificação (comprovante analisado por um moderador). Enquanto não há gateway, a aprovação já concede o selo (`users.verificado`); a cobrança do selo virá com o pagamento. Níveis: Free palpita; Membro palpita e comenta; Membro verificado também dá dicas. |
+| 16 | Sem blog | **Blog retirado do produto** (06/10/2026). Telas do site e do painel, model, enum e testes removidos; a tabela `postagens` foi tirada das migrations (como o projeto ainda não havia ido para nenhum servidor, a migration de patrocínio foi reescrita em vez de criar outra que a apagasse), e a posição de banner "Blog" deixou de existir. Patrocinadores passam a ter só banners. Diverge da documentação original e do dicionário, que preveem a tabela Postagem. |
 
 **Consequências da decisão 5 a observar no desenvolvimento:**
 
@@ -439,7 +441,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 ### 8.4 Estado da implementação em 04/10/2026
 
-**Todas as 31 tabelas de negócio têm migration e model**, com `uuid`, `deleted_at` e colunas de auditoria. O painel administrativo e o site do cliente estão completos; falta o que depende de pagamento online.
+**As 31 tabelas de negócio têm migration e model** (`postagens` foi removida depois, ver decisão 16; `dicas` foi criada, ver decisão 15), com `uuid`, `deleted_at` e colunas de auditoria. O painel administrativo e o site do cliente estão completos; falta o que depende de pagamento online.
 
 | Área | Tabela | Model | Situação |
 |---|---|---|---|
@@ -470,7 +472,6 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 | Assinaturas | `assinaturas_verificacao` | `AssinaturaVerificacao` | Sem tela (site do cliente) nem gateway |
 | Patrocínio | `patrocinadores` | `Patrocinador` | Tela no painel admin |
 | Patrocínio | `banners` | `Banner` | Tela no painel admin |
-| Patrocínio | `postagens` | `Postagem` | Tela no painel admin |
 | Ranking | `rankings` | `Ranking` | Tela no site; recalculado a cada luta encerrada |
 | Configuração | `configuracoes_pontuacao` | `ConfiguracaoPontuacao` | Tela no painel admin; padrão geral semeado |
 | Configuração | `pesos_troca_palpite` | `PesoTrocaPalpite` | Tela no painel admin; padrão geral semeado |
@@ -488,7 +489,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 **Demais pontos:**
 
-- A suíte tem 324 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
+- A suíte tem 331 testes, todos passando no MySQL; Pint, Larastan, vue-tsc e lint do front-end sem erros. Os testes de tela dependem do build do front-end (`npm run build`).
 - `ConfiguracaoPontuacaoSeeder` grava o padrão geral com os valores de partida da seção 6 (10/15/15/22 e as grades de 3 e 5 rounds). É idempotente e não sobrescreve o que o administrador já alterou.
 - Como o ranking geral soma pontos de todas as modalidades, uma categoria com pontuação própria entra nele com régua diferente das demais.
 - Painel administrativo em `/admin` (gate `acessar-admin`), com todas as áreas: cadastros básicos, atletas (fotos e estilos), eventos e card de lutas, andamento ao vivo e placar oficial, usuários e papéis, verificações, patrocínio (patrocinadores, banners, blog) e configuração de pontuação. Primeiro administrador: `php artisan app:promover-administrador {email} --nivel=super-admin`.

@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Site\AtletaController;
 use App\Http\Controllers\Site\BannerCliqueController;
-use App\Http\Controllers\Site\BlogController;
 use App\Http\Controllers\Site\ComentarioController;
+use App\Http\Controllers\Site\DicaController;
 use App\Http\Controllers\Site\EventoController;
 use App\Http\Controllers\Site\HomeController;
 use App\Http\Controllers\Site\LutaController;
@@ -15,7 +15,7 @@ use App\Http\Controllers\Site\SolicitacaoVerificacaoController;
 use Illuminate\Support\Facades\Route;
 
 /*
-| Site público: qualquer visitante vê eventos, lutas, atletas, ranking e blog.
+| Site público: qualquer visitante vê eventos, lutas, atletas e ranking.
 | Participar (palpitar, pontuar rounds, comentar) exige conta com e-mail confirmado.
 */
 Route::get('/', HomeController::class)->name('home');
@@ -29,9 +29,6 @@ Route::get('ranking', [RankingController::class, 'geral'])->name('ranking.geral'
 Route::get('ranking/eventos/{evento}', [RankingController::class, 'evento'])->name('ranking.evento');
 Route::get('ranking/organizacoes/{organizacao}', [RankingController::class, 'organizacao'])->name('ranking.organizacao');
 
-Route::get('blog', [BlogController::class, 'index'])->name('blog.index');
-Route::get('blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
-
 Route::get('banners/{banner}/clique', BannerCliqueController::class)->name('banners.clique');
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -42,6 +39,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('lutas/{luta}/comentarios', [ComentarioController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('comentarios.store');
+
+    Route::post('lutas/{luta}/dicas', [DicaController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('dicas.store');
 
     Route::get('verificacao', [SolicitacaoVerificacaoController::class, 'index'])->name('verificacao.index');
     Route::post('verificacao', [SolicitacaoVerificacaoController::class, 'store'])->name('verificacao.store');

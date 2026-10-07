@@ -17,7 +17,6 @@ use App\Http\Controllers\Admin\LutaJuizController;
 use App\Http\Controllers\Admin\OrganizacaoController;
 use App\Http\Controllers\Admin\PatrocinadorController;
 use App\Http\Controllers\Admin\PlacarController;
-use App\Http\Controllers\Admin\PostagemController;
 use App\Http\Controllers\Admin\TreinadorController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\VerificacaoController;
@@ -84,8 +83,6 @@ Route::middleware(['auth', 'verified', 'can:acessar-admin'])
             Route::resource('patrocinadores', PatrocinadorController::class)
                 ->parameters(['patrocinadores' => 'patrocinador'])->except('show');
             Route::resource('banners', BannerController::class)->except('show');
-            Route::resource('postagens', PostagemController::class)
-                ->parameters(['postagens' => 'postagem'])->except('show');
         });
 
         Route::middleware('can:'.AreaAdmin::Verificacoes->gate())->group(function () {

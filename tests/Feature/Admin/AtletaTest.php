@@ -160,3 +160,15 @@ test('an athlete who takes part in a fight cannot be deleted', function () {
 
     expect($atleta->refresh()->trashed())->toBeFalse();
 });
+
+test('the athlete list shows the main photo of each athlete', function () {
+    $comFoto = Atleta::factory()->create(['nome' => 'Com Foto']);
+    AtletaFoto::factory()->for($comFoto)->create(['ordem' => 1, 'principal' => true, 'foto_url' => 'atletas/com-foto.jpg']);
+    Atleta::factory()->create(['nome' => 'Sem Foto']);
+
+    $this->get(route('admin.atletas.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('atletas.data.0.nome', 'Com Foto')
+            ->where('atletas.data.0.foto', fn (string $url) => str_ends_with($url, 'atletas/com-foto.jpg'))
+            ->where('atletas.data.1.foto', null));
+});

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
- * Patrocinador do site, dono de banners e de postagens patrocinadas.
+ * Patrocinador do site, dono dos banners.
  *
  * @property int $id
  * @property string $uuid
@@ -51,14 +51,6 @@ class Patrocinador extends Model
     public function banners(): HasMany
     {
         return $this->hasMany(Banner::class);
-    }
-
-    /**
-     * @return HasMany<Postagem, $this>
-     */
-    public function postagens(): HasMany
-    {
-        return $this->hasMany(Postagem::class);
     }
 
     /**

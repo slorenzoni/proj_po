@@ -16,7 +16,6 @@ enum PosicaoBanner: string
     case Luta = 'luta';
     case Chat = 'chat';
     case Categoria = 'categoria';
-    case Blog = 'blog';
 
     public function label(): string
     {
@@ -26,7 +25,6 @@ enum PosicaoBanner: string
             self::Luta => 'Luta',
             self::Chat => 'Chat',
             self::Categoria => 'Categoria',
-            self::Blog => 'Blog',
         };
     }
 }

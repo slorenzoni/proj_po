@@ -7,6 +7,7 @@ import PageHeader from '@/components/admin/PageHeader.vue';
 import Pagination from '@/components/admin/Pagination.vue';
 import RowActions from '@/components/admin/RowActions.vue';
 import SearchForm from '@/components/admin/SearchForm.vue';
+import AthleteAvatar from '@/components/site/AthleteAvatar.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { adminBreadcrumbs } from '@/lib/adminNav';
@@ -19,6 +20,7 @@ type Atleta = {
     pais: string | null;
     cartel: string;
     invicto: boolean;
+    foto: string | null;
 };
 
 defineProps<{
@@ -64,7 +66,14 @@ defineOptions({
             :rows="atletas.data"
         >
             <template #cell-nome="{ row }">
-                <span class="font-medium">{{ row.nome }}</span>
+                <span class="flex items-center gap-3 font-medium">
+                    <AthleteAvatar
+                        :nome="row.nome"
+                        :foto="row.foto"
+                        size="sm"
+                    />
+                    {{ row.nome }}
+                </span>
             </template>
             <template #cell-cartel="{ row }">
                 <span class="flex items-center gap-2 tabular-nums">

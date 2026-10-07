@@ -35,7 +35,17 @@ test('approving records who analysed the request and when', function () {
         ->status->toBe(StatusSolicitacaoVerificacao::Aprovada)
         ->analisado_por_user_id->toBe($this->moderador->id)
         ->analisado_em->not->toBeNull()
-        ->motivo_rejeicao->toBeNull();
+        ->motivo_rejeicao->toBeNull()
+        ->and($solicitacao->user->refresh()->verificado)->toBeTrue()
+        ->and($solicitacao->user->verificado_em)->not->toBeNull();
+});
+
+test('rejecting a request does not grant the badge', function () {
+    $solicitacao = SolicitacaoVerificacao::factory()->create();
+
+    $this->post(route('admin.verificacoes.rejeitar', $solicitacao), ['motivo_rejeicao' => 'Documento ilegível.']);
+
+    expect($solicitacao->user->refresh()->verificado)->toBeFalse();
 });
 
 test('rejecting requires a reason and stores it', function () {

@@ -41,7 +41,7 @@ defineOptions({
     <div class="flex h-full flex-1 flex-col gap-8 p-4">
         <PageHeader
             title="Selo de verificado"
-            description="O selo mostra aos outros usuários que a sua identidade foi confirmada pela nossa equipe."
+            description="Exclusivo para Membros. O selo confirma a sua identidade e libera a publicação de dicas nas lutas."
         >
             <Badge v-if="verificado">Conta verificada</Badge>
         </PageHeader>
@@ -97,7 +97,7 @@ defineOptions({
                     (solicitacao) => solicitacao.status.value === 'pendente',
                 )
                     ? 'Sua solicitação está em análise. Você poderá enviar outra depois da resposta.'
-                    : 'O selo está disponível apenas para contas de cliente.'
+                    : 'O selo é exclusivo para assinantes do plano Membro.'
             }}
         </p>
 

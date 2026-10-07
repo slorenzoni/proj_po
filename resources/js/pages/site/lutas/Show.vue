@@ -3,9 +3,11 @@ import { Form, Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import AtletaController from '@/actions/App/Http/Controllers/Site/AtletaController';
 import ComentarioController from '@/actions/App/Http/Controllers/Site/ComentarioController';
+import DicaController from '@/actions/App/Http/Controllers/Site/DicaController';
 import EventoController from '@/actions/App/Http/Controllers/Site/EventoController';
 import PalpiteController from '@/actions/App/Http/Controllers/Site/PalpiteController';
 import PlacarFanController from '@/actions/App/Http/Controllers/Site/PlacarFanController';
+import SolicitacaoVerificacaoController from '@/actions/App/Http/Controllers/Site/SolicitacaoVerificacaoController';
 import SelectInput from '@/components/admin/SelectInput.vue';
 import TextArea from '@/components/admin/TextArea.vue';
 import InputError from '@/components/InputError.vue';
@@ -85,6 +87,14 @@ const props = defineProps<{
         criado_em: string | null;
     }[];
     podeComentar: boolean;
+    dicas: {
+        uuid: string;
+        autor: string | null;
+        destaque: string;
+        texto: string;
+        criado_em: string | null;
+    }[];
+    podeDarDica: boolean;
     banners: { luta: BannerSite[]; chat: BannerSite[] };
 }>();
 
@@ -596,6 +606,76 @@ const momento = computed(() => {
                 </div>
             </section>
         </div>
+
+        <section class="space-y-4">
+            <header class="space-y-0.5">
+                <h2 class="text-xl font-semibold">Dicas dos especialistas</h2>
+                <p class="text-sm text-muted-foreground">
+                    Análises de comentaristas e de Membros verificados.
+                </p>
+            </header>
+
+            <Form
+                v-if="podeDarDica"
+                v-bind="DicaController.store.form(luta.uuid)"
+                :options="{ preserveScroll: true }"
+                reset-on-success
+                class="space-y-2"
+                v-slot="{ errors, processing }"
+            >
+                <Label for="dica" class="sr-only">Sua dica</Label>
+                <TextArea
+                    id="dica"
+                    name="texto"
+                    :rows="4"
+                    :maxlength="2000"
+                    required
+                    placeholder="Compartilhe sua análise da luta…"
+                />
+                <InputError :message="errors.texto" />
+                <Button type="submit" :disabled="processing">
+                    Publicar dica
+                </Button>
+            </Form>
+            <p
+                v-else-if="logado"
+                class="rounded-lg border border-dashed p-4 text-sm text-muted-foreground"
+            >
+                Dar dicas é exclusivo de comentaristas e de Membros com selo de
+                verificado.
+                <Link
+                    :href="SolicitacaoVerificacaoController.index()"
+                    class="font-medium text-foreground underline"
+                >
+                    Saiba como obter o selo.
+                </Link>
+            </p>
+
+            <ul class="space-y-3">
+                <li
+                    v-for="dica in dicas"
+                    :key="dica.uuid"
+                    class="rounded-lg border border-primary/30 bg-primary/5 p-4"
+                >
+                    <p class="flex flex-wrap items-center gap-2 text-sm">
+                        <span class="font-medium">{{ dica.autor }}</span>
+                        <Badge>{{ dica.destaque }}</Badge>
+                        <span class="text-xs text-muted-foreground">
+                            {{ formatarDataHora(dica.criado_em) }}
+                        </span>
+                    </p>
+                    <p class="mt-2 text-sm whitespace-pre-line">
+                        {{ dica.texto }}
+                    </p>
+                </li>
+                <li
+                    v-if="dicas.length === 0"
+                    class="text-sm text-muted-foreground"
+                >
+                    Nenhuma dica para esta luta ainda.
+                </li>
+            </ul>
+        </section>
 
         <section class="grid gap-6 lg:grid-cols-[1fr_18rem]">
             <div class="space-y-4">

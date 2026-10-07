@@ -5,14 +5,12 @@ use App\Enums\PlanoAssinatura;
 use App\Enums\PosicaoBanner;
 use App\Enums\StatusBanner;
 use App\Enums\StatusEvento;
-use App\Enums\StatusPostagem;
 use App\Enums\StatusSolicitacaoVerificacao;
 use App\Models\Atleta;
 use App\Models\Banner;
 use App\Models\Evento;
 use App\Models\Luta;
 use App\Models\Palpite;
-use App\Models\Postagem;
 use App\Models\Ranking;
 use App\Models\SolicitacaoVerificacao;
 use App\Models\User;
@@ -30,7 +28,6 @@ test('visitors can browse the public pages without an account', function () {
     $this->get(route('ranking.geral'))->assertInertia(fn ($page) => $page->component('site/ranking/Index'));
     $this->get(route('ranking.evento', $luta->evento))->assertOk();
     $this->get(route('ranking.organizacao', $luta->evento->organizacao))->assertOk();
-    $this->get(route('blog.index'))->assertInertia(fn ($page) => $page->component('site/blog/Index'));
 });
 
 test('the events list separates upcoming from finished events', function () {
@@ -66,41 +63,13 @@ test('a ranking page shows only its scope and the position of the visitor', func
             ->where('minhaPosicao', ['posicao' => 1, 'pontos' => '10.00']));
 });
 
-test('only published posts with a past date are public', function () {
-    $publicada = Postagem::factory()->create(['status' => StatusPostagem::Publicado, 'data_publicacao' => today()]);
-    $rascunho = Postagem::factory()->create(['status' => StatusPostagem::Rascunho]);
-    $agendada = Postagem::factory()->create(['status' => StatusPostagem::Publicado, 'data_publicacao' => today()->addDay()]);
-
-    $this->get(route('blog.index'))
-        ->assertInertia(fn ($page) => $page->has('postagens.data', 1)->where('postagens.data.0.slug', $publicada->slug));
-
-    $this->get(route('blog.show', $publicada->slug))->assertOk();
-    $this->get(route('blog.show', $rascunho->slug))->assertNotFound();
-    $this->get(route('blog.show', $agendada->slug))->assertNotFound();
-});
-
-test('post content is rendered as markdown and typed html is never executed', function () {
-    $postagem = Postagem::factory()->create([
-        'status' => StatusPostagem::Publicado,
-        'data_publicacao' => today(),
-        'conteudo' => "**Destaque**\n\n<script>alert('x')</script>\n\n[link](javascript:alert(1))",
-    ]);
-
-    $this->get(route('blog.show', $postagem->slug))
-        ->assertInertia(fn ($page) => $page
-            ->component('site/blog/Show')
-            ->where('postagem.conteudo_html', fn (string $html) => str_contains($html, '<strong>Destaque</strong>')
-                && ! str_contains($html, '<script')
-                && ! str_contains($html, 'javascript:')));
-});
-
 test('a banner is shown only while active and inside its period, counting the impression', function () {
     Storage::fake('public');
     $exibido = Banner::factory()->create(['posicao' => PosicaoBanner::Home, 'data_inicio' => today()->subDay(), 'data_fim' => today()]);
     Banner::factory()->create(['posicao' => PosicaoBanner::Home, 'status' => StatusBanner::Pausado]);
     Banner::factory()->create(['posicao' => PosicaoBanner::Home, 'data_inicio' => today()->addDay()]);
     Banner::factory()->create(['posicao' => PosicaoBanner::Home, 'data_inicio' => today()->subWeek(), 'data_fim' => today()->subDay()]);
-    $outraPosicao = Banner::factory()->create(['posicao' => PosicaoBanner::Blog]);
+    $outraPosicao = Banner::factory()->create(['posicao' => PosicaoBanner::Evento]);
 
     $this->get(route('home'))
         ->assertInertia(fn ($page) => $page->has('banners', 1)->where('banners.0.uuid', $exibido->uuid));
@@ -138,9 +107,9 @@ test('the client panel summarises the score and lists only the own picks', funct
             ->where('palpites.data.0.uuid', $meu->uuid));
 });
 
-test('a client requests the verified badge once at a time', function () {
+test('a member requests the verified badge once at a time', function () {
     Storage::fake('public');
-    $user = cliente();
+    $user = membro();
 
     $this->actingAs($user)->post(route('verificacao.store'), [
         'documento' => UploadedFile::fake()->create('rg.pdf', 100, 'application/pdf'),
@@ -162,9 +131,9 @@ test('a client requests the verified badge once at a time', function () {
     expect(SolicitacaoVerificacao::query()->count())->toBe(1);
 });
 
-test('a rejected client can request the badge again', function () {
+test('a rejected member can request the badge again', function () {
     Storage::fake('public');
-    $user = cliente();
+    $user = membro();
     SolicitacaoVerificacao::factory()->for($user)->create(['status' => StatusSolicitacaoVerificacao::Rejeitada]);
 
     $this->actingAs($user)->get(route('verificacao.index'))
@@ -175,11 +144,15 @@ test('a rejected client can request the badge again', function () {
     ])->assertSessionHasNoErrors();
 });
 
-test('the badge request rejects other file types and accounts that are not clients', function () {
+test('the badge request rejects other file types and accounts that are not members', function () {
     Storage::fake('public');
 
-    $this->actingAs(cliente())->post(route('verificacao.store'), [
+    $this->actingAs(membro())->post(route('verificacao.store'), [
         'documento' => UploadedFile::fake()->create('virus.exe', 10),
+    ])->assertSessionHasErrors('documento');
+
+    $this->actingAs(cliente())->post(route('verificacao.store'), [
+        'documento' => UploadedFile::fake()->create('rg.pdf', 100, 'application/pdf'),
     ])->assertSessionHasErrors('documento');
 
     $this->actingAs(administrador())->post(route('verificacao.store'), [

@@ -198,6 +198,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->destaqueNosComentarios() !== null || $this->isMembro();
     }
 
+    /**
+     * Decisão de 06/10/2026: dão dicas os comentaristas e os Membros com selo de verificado.
+     * O selo só é concedido a Membros; se a assinatura acabar, perde-se o direito.
+     */
+    public function podeDarDica(): bool
+    {
+        return $this->hasPapel(Papel::COMENTARISTA) || ($this->verificado && $this->isMembro());
+    }
+
     public function isCliente(): bool
     {
         return $this->perfilCliente !== null;

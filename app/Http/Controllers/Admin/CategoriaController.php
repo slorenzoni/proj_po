@@ -6,7 +6,6 @@ use App\Http\Requests\Admin\CategoriaRequest;
 use App\Models\Categoria;
 use App\Models\CategoriaPeso;
 use App\Models\Luta;
-use App\Models\Postagem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -82,11 +81,10 @@ class CategoriaController extends AdminController
     public function destroy(Categoria $categoria): RedirectResponse
     {
         $emUso = $categoria->categoriasPeso()->exists()
-            || Luta::query()->whereBelongsTo($categoria)->exists()
-            || Postagem::query()->whereBelongsTo($categoria)->exists();
+            || Luta::query()->whereBelongsTo($categoria)->exists();
 
         if ($emUso) {
-            $this->erro('Esta categoria tem categorias de peso, lutas ou postagens vinculadas e não pode ser excluída.');
+            $this->erro('Esta categoria tem categorias de peso ou lutas vinculadas e não pode ser excluída.');
 
             return back();
         }

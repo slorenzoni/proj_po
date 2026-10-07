@@ -6,7 +6,6 @@ import {
     Handshake,
     Image,
     Layers,
-    Newspaper,
     Settings2,
     Shapes,
     Swords,
@@ -21,7 +20,6 @@ import EventoController from '@/actions/App/Http/Controllers/Admin/EventoControl
 import JuizController from '@/actions/App/Http/Controllers/Admin/JuizController';
 import OrganizacaoController from '@/actions/App/Http/Controllers/Admin/OrganizacaoController';
 import PatrocinadorController from '@/actions/App/Http/Controllers/Admin/PatrocinadorController';
-import PostagemController from '@/actions/App/Http/Controllers/Admin/PostagemController';
 import TreinadorController from '@/actions/App/Http/Controllers/Admin/TreinadorController';
 import UsuarioController from '@/actions/App/Http/Controllers/Admin/UsuarioController';
 import VerificacaoController from '@/actions/App/Http/Controllers/Admin/VerificacaoController';
@@ -101,13 +99,6 @@ export const adminNavItems: AdminNavItem[] = [
         descricao: 'Peças publicitárias por posição do site.',
         href: BannerController.index(),
         icon: Image,
-        area: 'cadastros',
-    },
-    {
-        title: 'Blog',
-        descricao: 'Postagens, patrocinadas ou não.',
-        href: PostagemController.index(),
-        icon: Newspaper,
         area: 'cadastros',
     },
     {

@@ -92,8 +92,8 @@ class PatrocinadorController extends AdminController
 
     public function destroy(Patrocinador $patrocinador): RedirectResponse
     {
-        if ($patrocinador->banners()->exists() || $patrocinador->postagens()->exists()) {
-            $this->erro('Este patrocinador tem banners ou postagens vinculados e não pode ser excluído.');
+        if ($patrocinador->banners()->exists()) {
+            $this->erro('Este patrocinador tem banners vinculados e não pode ser excluído.');
 
             return back();
         }

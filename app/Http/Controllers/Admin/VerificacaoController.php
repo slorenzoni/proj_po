@@ -7,13 +7,14 @@ use App\Models\SolicitacaoVerificacao;
 use App\Services\MediaStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Fila de pedidos de selo de verificado. A aprovação só registra a análise: o selo
- * em si depende da cobrança recorrente (assinaturas_verificacao), ainda sem gateway.
+ * Fila de pedidos de selo de verificado. Enquanto não há gateway, aprovar já concede o
+ * selo; a cobrança recorrente (assinaturas_verificacao) virá com o pagamento online.
  */
 class VerificacaoController extends AdminController
 {
@@ -87,12 +88,20 @@ class VerificacaoController extends AdminController
             return back();
         }
 
-        $solicitacao->update([
-            'status' => $resultado,
-            'motivo_rejeicao' => $motivoRejeicao,
-            'analisado_por_user_id' => $request->user()?->id,
-            'analisado_em' => now(),
-        ]);
+        DB::transaction(function () use ($request, $solicitacao, $resultado, $motivoRejeicao): void {
+            $solicitacao->update([
+                'status' => $resultado,
+                'motivo_rejeicao' => $motivoRejeicao,
+                'analisado_por_user_id' => $request->user()?->id,
+                'analisado_em' => now(),
+            ]);
+
+            // Enquanto não há gateway, a aprovação já concede o selo (sem gerar a cobrança).
+            if ($resultado === StatusSolicitacaoVerificacao::Aprovada) {
+                // forceFill: "verificado" não é preenchível por formulário, só por esta análise.
+                $solicitacao->user?->forceFill(['verificado' => true, 'verificado_em' => now()])->save();
+            }
+        });
 
         $this->sucesso($mensagem);
 

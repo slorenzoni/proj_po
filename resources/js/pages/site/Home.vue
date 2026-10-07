@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import BlogController from '@/actions/App/Http/Controllers/Site/BlogController';
 import EventoController from '@/actions/App/Http/Controllers/Site/EventoController';
 import RankingController from '@/actions/App/Http/Controllers/Site/RankingController';
 import BannerSlot from '@/components/site/BannerSlot.vue';
@@ -28,13 +27,6 @@ defineProps<{
         nome: string | null;
         verificado: boolean;
         pontos: string;
-    }[];
-    postagens: {
-        slug: string;
-        titulo: string;
-        resumo: string | null;
-        capa: string | null;
-        patrocinado: boolean;
     }[];
     banners: BannerSite[];
 }>();
@@ -122,99 +114,43 @@ defineProps<{
             </div>
         </section>
 
-        <div class="grid gap-12 lg:grid-cols-[1fr_20rem]">
-            <section class="space-y-4">
-                <div class="flex items-end justify-between gap-4">
-                    <h2 class="text-xl font-semibold">Do blog</h2>
-                    <Link
-                        :href="BlogController.index()"
-                        class="text-sm underline-offset-4 hover:underline"
-                    >
-                        Ver todas
-                    </Link>
-                </div>
-
-                <p
-                    v-if="postagens.length === 0"
-                    class="text-sm text-muted-foreground"
+        <section class="max-w-xl space-y-4">
+            <div class="flex items-end justify-between gap-4">
+                <h2 class="text-xl font-semibold">Ranking geral</h2>
+                <Link
+                    :href="RankingController.geral()"
+                    class="text-sm underline-offset-4 hover:underline"
                 >
-                    Nenhuma postagem publicada ainda.
-                </p>
+                    Completo
+                </Link>
+            </div>
 
-                <ul class="space-y-4">
-                    <li v-for="postagem in postagens" :key="postagem.slug">
-                        <Link
-                            :href="BlogController.show(postagem.slug)"
-                            class="flex gap-4 rounded-lg border p-3 transition-colors hover:bg-accent/50"
-                        >
-                            <img
-                                v-if="postagem.capa"
-                                :src="postagem.capa"
-                                alt=""
-                                class="h-20 w-28 shrink-0 rounded object-cover"
-                            />
-                            <span class="min-w-0 space-y-1">
-                                <span
-                                    class="flex flex-wrap items-center gap-2 font-medium"
-                                >
-                                    {{ postagem.titulo }}
-                                    <Badge
-                                        v-if="postagem.patrocinado"
-                                        variant="outline"
-                                    >
-                                        Patrocinado
-                                    </Badge>
-                                </span>
-                                <span
-                                    v-if="postagem.resumo"
-                                    class="block text-sm text-muted-foreground"
-                                >
-                                    {{ postagem.resumo }}
-                                </span>
-                            </span>
-                        </Link>
-                    </li>
-                </ul>
-            </section>
+            <p
+                v-if="ranking.length === 0"
+                class="text-sm text-muted-foreground"
+            >
+                O ranking começa quando a primeira luta for encerrada.
+            </p>
 
-            <section class="space-y-4">
-                <div class="flex items-end justify-between gap-4">
-                    <h2 class="text-xl font-semibold">Ranking geral</h2>
-                    <Link
-                        :href="RankingController.geral()"
-                        class="text-sm underline-offset-4 hover:underline"
-                    >
-                        Completo
-                    </Link>
-                </div>
-
-                <p
-                    v-if="ranking.length === 0"
-                    class="text-sm text-muted-foreground"
+            <ol class="divide-y rounded-lg border">
+                <li
+                    v-for="linha in ranking"
+                    :key="linha.posicao ?? linha.nome ?? ''"
+                    class="flex items-center gap-3 px-3 py-2 text-sm"
                 >
-                    O ranking começa quando a primeira luta for encerrada.
-                </p>
-
-                <ol class="divide-y rounded-lg border">
-                    <li
-                        v-for="linha in ranking"
-                        :key="linha.posicao ?? linha.nome ?? ''"
-                        class="flex items-center gap-3 px-3 py-2 text-sm"
+                    <span
+                        class="w-6 font-semibold text-muted-foreground tabular-nums"
                     >
-                        <span
-                            class="w-6 font-semibold text-muted-foreground tabular-nums"
-                        >
-                            {{ linha.posicao }}º
-                        </span>
-                        <span class="min-w-0 flex-1 truncate">
-                            {{ linha.nome }}
-                        </span>
-                        <span class="font-medium tabular-nums">
-                            {{ linha.pontos }}
-                        </span>
-                    </li>
-                </ol>
-            </section>
-        </div>
+                        {{ linha.posicao }}º
+                    </span>
+                    <span class="min-w-0 flex-1 truncate">
+                        {{ linha.nome }}
+                    </span>
+                    <span class="font-medium tabular-nums">
+                        {{ linha.pontos }}
+                    </span>
+                </li>
+            </ol>
+        </section>
     </div>
 </template>

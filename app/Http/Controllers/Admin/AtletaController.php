@@ -26,6 +26,7 @@ class AtletaController extends AdminController
         return Inertia::render('admin/atletas/Index', [
             'filtros' => ['busca' => $busca],
             'atletas' => Atleta::query()
+                ->with('fotoPrincipal')
                 ->when($busca !== '', fn ($query) => $query->where(fn ($query) => $query
                     ->whereLike('nome', "%{$busca}%")
                     ->orWhereLike('apelido', "%{$busca}%")))
@@ -39,6 +40,7 @@ class AtletaController extends AdminController
                     'pais' => $atleta->pais,
                     'cartel' => "{$atleta->vitorias}-{$atleta->derrotas}-{$atleta->empates}",
                     'invicto' => $atleta->invicto,
+                    'foto' => $this->media->url($atleta->fotoPrincipal?->foto_url),
                 ]),
         ]);
     }

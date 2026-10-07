@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Patrocinadores, banners e postagens do blog (patrocinadas ou não).
+ * Patrocinadores e seus banners.
  */
 return new class extends Migration
 {
@@ -52,32 +52,6 @@ return new class extends Migration
 
             $table->index(['posicao', 'status', 'data_inicio', 'data_fim']);
         });
-
-        Schema::create('postagens', function (Blueprint $table) {
-            $table->id();
-            $table->publicUuid();
-            $table->string('titulo', 200);
-            $table->string('slug', 220);
-            $table->text('conteudo');
-            $table->string('meta_description', 160)->nullable();
-            // Caminho do arquivo no disco de mídia.
-            $table->string('imagem_capa', 255)->nullable();
-            // Autor/publicador: deve possuir perfil_administrador (validado na aplicação).
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('patrocinador_id')->nullable()->constrained('patrocinadores');
-            // Calculado pelo model a partir de patrocinador_id.
-            $table->boolean('patrocinado')->default(false);
-            $table->string('fonte_original_url', 255)->nullable();
-            $table->foreignId('categoria_id')->nullable()->constrained('categorias');
-            $table->string('status', 20)->default('rascunho');
-            $table->date('data_publicacao')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-            $table->auditColumns();
-
-            $table->index('slug');
-            $table->index(['status', 'data_publicacao']);
-        });
     }
 
     /**
@@ -85,7 +59,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('postagens');
         Schema::dropIfExists('banners');
         Schema::dropIfExists('patrocinadores');
     }

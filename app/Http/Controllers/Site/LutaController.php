@@ -6,9 +6,11 @@ use App\Enums\MetodoPalpite;
 use App\Enums\PosicaoBanner;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Site\Concerns\ApresentaLutas;
+use App\Models\Dica;
 use App\Models\Luta;
 use App\Models\Mensagem;
 use App\Models\Palpite;
+use App\Models\Papel;
 use App\Models\Placar;
 use App\Models\PlacarFan;
 use App\Models\User;
@@ -110,6 +112,18 @@ class LutaController extends Controller
                     'criado_em' => $mensagem->created_at?->toIso8601String(),
                 ]),
             'podeComentar' => (bool) $user?->podeComentar(),
+            'dicas' => $luta->dicas()
+                ->with(['user.papeis'])
+                ->latest()
+                ->get()
+                ->map(fn (Dica $dica): array => [
+                    'uuid' => $dica->uuid,
+                    'autor' => $dica->user?->name,
+                    'destaque' => $dica->user?->hasPapel(Papel::COMENTARISTA) ? Papel::COMENTARISTA : 'Verificado',
+                    'texto' => $dica->texto,
+                    'criado_em' => $dica->created_at?->toIso8601String(),
+                ]),
+            'podeDarDica' => (bool) $user?->podeDarDica(),
             'banners' => [
                 'luta' => $banners->para(PosicaoBanner::Luta),
                 'chat' => $banners->para(PosicaoBanner::Chat),

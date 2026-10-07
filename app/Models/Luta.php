@@ -194,6 +194,14 @@ class Luta extends Model
     }
 
     /**
+     * @return HasMany<Dica, $this>
+     */
+    public function dicas(): HasMany
+    {
+        return $this->hasMany(Dica::class);
+    }
+
+    /**
      * @return HasMany<Mensagem, $this>
      */
     public function mensagens(): HasMany

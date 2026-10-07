@@ -52,7 +52,7 @@ class SolicitacaoVerificacaoController extends Controller
 
         if (! $this->podeSolicitar($user)) {
             throw ValidationException::withMessages([
-                'documento' => 'Você já tem uma solicitação em análise ou já é verificado.',
+                'documento' => 'O selo é exclusivo para Membros ainda não verificados, com uma solicitação por vez.',
             ]);
         }
 
@@ -69,11 +69,11 @@ class SolicitacaoVerificacaoController extends Controller
     }
 
     /**
-     * Só clientes ainda não verificados, e uma solicitação em análise por vez.
+     * Só Membros ainda não verificados (decisão de 06/10/2026), e uma solicitação em análise por vez.
      */
     private function podeSolicitar(User $user): bool
     {
-        return $user->isCliente()
+        return $user->isMembro()
             && ! $user->verificado
             && ! SolicitacaoVerificacao::query()
                 ->whereBelongsTo($user)

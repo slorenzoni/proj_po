@@ -42,7 +42,7 @@ defineOptions({
     <div class="flex h-full flex-1 flex-col gap-6 p-4">
         <PageHeader
             title="Patrocinadores"
-            description="Empresas que contratam banners e postagens patrocinadas."
+            description="Empresas que contratam banners no site."
         >
             <Button as-child>
                 <Link :href="PatrocinadorController.create()">

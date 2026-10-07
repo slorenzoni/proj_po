@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import BlogController from '@/actions/App/Http/Controllers/Site/BlogController';
 import EventoController from '@/actions/App/Http/Controllers/Site/EventoController';
 import HomeController from '@/actions/App/Http/Controllers/Site/HomeController';
 import RankingController from '@/actions/App/Http/Controllers/Site/RankingController';
@@ -23,7 +22,6 @@ const { isCurrentOrParentUrl } = useCurrentUrl();
 const links = [
     { title: 'Eventos', href: EventoController.index() },
     { title: 'Ranking', href: RankingController.geral() },
-    { title: 'Blog', href: BlogController.index() },
 ];
 </script>
 
