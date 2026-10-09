@@ -33,6 +33,7 @@ O subdomínio é configurado no painel da Locaweb como "conteúdo de pasta" apon
 | SSH só depois de **liberar no painel**, e a liberação dura **3 horas** | Combinar a janela antes de publicar |
 | Sem a liberação, o SSH **aceita a senha** e o comando termina sem erro e **sem nenhuma saída** (nada é executado) | Script de deploy que não devolve nada: conferir a liberação antes de investigar o script |
 | FTP (porta 21) funciona, mas sem TLS | Enviar arquivos por SSH/SCP (porta 22), que é criptografado |
+| E-mail pelo SMTP da Locaweb (`email-ssl.com.br`, porta **465**, conta `contato@vipti.com.br`, remetente "po - prime"), ativo desde 09/10/2026 | `MAIL_MAILER=smtp` com **`MAIL_SCHEME=smtps`** (a 465 já começa criptografada); o remetente tem de ser a própria conta autenticada. A mesma conta é usada pelo PROJ_TED |
 | HTTPS termina num proxy antes do PHP | `trustProxies(at: '*')` em `bootstrap/app.php` e `URL::forceScheme('https')` quando `APP_URL` é https — sem isso o login redireciona para `http` e a sessão se perde |
 | Banco MySQL **5.7** (local usa 8.4), com acesso externo | Migrations rodam do notebook; validar antes com `migrate --pretend` |
 | `zip` do PowerShell grava caminhos com `\` | Empacotar com `tar.gz` |
@@ -87,8 +88,11 @@ Com o SSH liberado, editar `~/po_app/.env` e depois rodar `php84 artisan config:
 
 ## Pendências de produção
 
-- **E-mail em modo `log`:** cadastros novos não recebem a confirmação e, sem ela, não palpitam.
-  Configurar SMTP no `.env` do servidor.
+- **E-mail do administrador:** o admin usa `admin@email.com`, de um domínio que não é nosso
+  (`email.com`). Com o SMTP ativo, um "esqueci minha senha" nessa conta envia o link de
+  redefinição para a caixa de um terceiro. Trocar por um endereço próprio.
+- **Entrega de e-mail para fora do domínio:** o SMTP foi testado enviando para a própria conta
+  (`contato@vipti.com.br`). Falta testar Gmail/Outlook; as mensagens saem sem DKIM.
 - **Senhas que passaram por conversa:** trocar FTP/SSH e banco no painel; se trocar a do banco,
   atualizar `~/po_app/.env` e o `.Producao_acessos`.
 - **Fotos do Wikimedia Commons:** as licenças exigem crédito ao autor; definir como exibir ou
