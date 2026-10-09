@@ -10,6 +10,7 @@ use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -83,6 +84,13 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        // Com APP_URL em https, todo endereço gerado (redirecionamentos inclusive) sai em https,
+        // mesmo que a requisição chegue em http vinda do proxy. Sem isso o login volta para
+        // http e o cookie de sessão "secure" não é enviado.
+        if (str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),

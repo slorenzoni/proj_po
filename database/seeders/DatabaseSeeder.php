@@ -20,7 +20,12 @@ class DatabaseSeeder extends Seeder
         $this->call(PapelSeeder::class);
         $this->call(ConfiguracaoPontuacaoSeeder::class);
 
-        // Usuário de desenvolvimento com os dois perfis (cliente + super-admin).
+        // Usuário de desenvolvimento com os dois perfis (cliente + super-admin). Nunca em produção:
+        // a senha da factory é pública. Em produção o primeiro admin vem de app:promover-administrador.
+        if (! app()->environment(['local', 'testing'])) {
+            return;
+        }
+
         User::factory()
             ->cliente()
             ->administrador(NivelAcesso::SuperAdmin)

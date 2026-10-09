@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
+        // Na Locaweb o HTTPS termina num proxy antes do PHP: confiar nos cabeçalhos X-Forwarded-*
+        // para o Laravel saber o protocolo e o IP real do visitante (usado na auditoria).
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,

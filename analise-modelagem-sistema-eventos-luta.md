@@ -401,6 +401,8 @@ Pelas regras da IJF, o Judô **não tem rounds nem 10-point must**: usa ippon, w
 
 **Versionamento:** git, branch `main`, remoto `https://github.com/slorenzoni/proj_po.git` (criado em 04/10/2026).
 
+**Produção:** https://po.vipti.com.br, na Locaweb (hospedagem de sites), no ar desde 09/10/2026. MySQL 5.7.32 e PHP 8.4 (`php84` no terminal). Fila em `sync` e e-mail em `log` por limitações do servidor e falta de SMTP. Estrutura, particularidades da Locaweb e passo a passo de atualização em `DEPLOY.md`; scripts em `deploy/`. Acessos e senhas em `.Producao_acessos`, fora do Git.
+
 ### 8.2 Decisões técnicas fechadas
 
 Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
@@ -510,6 +512,7 @@ Aprovadas por Sandro em 01/10/2026, salvo indicação em contrário.
 
 ### 8.5 Pendências
 
+- Configurar SMTP em produção (hoje o e-mail está em modo log e cadastros novos não recebem a confirmação).
 - Gateway de pagamento.
 - Ranking geral: histórico completo ou janela móvel. **Implementado provisoriamente com o histórico completo.**
 - Prazo de pontuação do placar dos fãs: o padrão semeado é de 5 minutos, valor provisório ainda não confirmado.
