@@ -31,6 +31,7 @@ O subdomínio é configurado no painel da Locaweb como "conteúdo de pasta" apon
 | Não há `php` padrão no terminal | Usar **`php84`** (8.4) em todos os comandos |
 | `proc_open`, `exec`, `symlink` e `mail` desativados no PHP | Fila em `QUEUE_CONNECTION=sync`; `storage:link` não funciona (usar `ln -s`); e-mail só por SMTP; `artisan about` não funciona |
 | SSH só depois de **liberar no painel**, e a liberação dura **3 horas** | Combinar a janela antes de publicar |
+| Sem a liberação, o SSH **aceita a senha** e o comando termina sem erro e **sem nenhuma saída** (nada é executado) | Script de deploy que não devolve nada: conferir a liberação antes de investigar o script |
 | FTP (porta 21) funciona, mas sem TLS | Enviar arquivos por SSH/SCP (porta 22), que é criptografado |
 | HTTPS termina num proxy antes do PHP | `trustProxies(at: '*')` em `bootstrap/app.php` e `URL::forceScheme('https')` quando `APP_URL` é https — sem isso o login redireciona para `http` e a sessão se perde |
 | Banco MySQL **5.7** (local usa 8.4), com acesso externo | Migrations rodam do notebook; validar antes com `migrate --pretend` |
