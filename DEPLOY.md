@@ -35,6 +35,7 @@ O subdomínio é configurado no painel da Locaweb como "conteúdo de pasta" apon
 | FTP (porta 21) funciona, mas sem TLS | Enviar arquivos por SSH/SCP (porta 22), que é criptografado |
 | E-mail pelo SMTP da Locaweb (`email-ssl.com.br`, porta **465**, conta `contato@vipti.com.br`, remetente "po - prime"), ativo desde 09/10/2026 | `MAIL_MAILER=smtp` com **`MAIL_SCHEME=smtps`** (a 465 já começa criptografada); o remetente tem de ser a própria conta autenticada. A mesma conta é usada pelo PROJ_TED |
 | HTTPS termina num proxy antes do PHP | `trustProxies(at: '*')` em `bootstrap/app.php` e `URL::forceScheme('https')` quando `APP_URL` é https — sem isso o login redireciona para `http` e a sessão se perde |
+| O Cloudflare tem de ficar em modo SSL/TLS **"Full"** (não "Flexible" nem "Full (strict)"); trocado em 09/10/2026 | Em "Flexible" ele fala com a Locaweb pela porta 80, o PHP recebe `X-Forwarded-Proto: http` e todo **link assinado** (verificação de e-mail, convite) dá **403 Invalid signature**, mesmo com o link em https — além de o trecho até a Locaweb trafegar sem criptografia. "Full (strict)" não serve: o certificado da Locaweb é genérico (`*.websiteseguro.com`) |
 | Banco MySQL **5.7** (local usa 8.4), com acesso externo | Migrations rodam do notebook; validar antes com `migrate --pretend` |
 | `zip` do PowerShell grava caminhos com `\` | Empacotar com `tar.gz` |
 
