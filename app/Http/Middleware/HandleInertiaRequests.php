@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Turnstile;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -45,6 +46,9 @@ class HandleInertiaRequests extends Middleware
                 // Áreas do painel que o nível do administrador enxerga; a autorização real são os gates "admin.*".
                 'areasAdmin' => array_column($request->user()?->perfilAdministrador?->nivel_acesso->areas() ?? [], 'value'),
             ],
+            // Chave PÚBLICA do captcha do Cloudflare (null = captcha desligado, ex.: testes) — ver
+            // components/CaptchaCloudflare.vue e SEGURANCA.md (PG3).
+            'captchaSiteKey' => Turnstile::ativo() ? config('services.turnstile.site_key') : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

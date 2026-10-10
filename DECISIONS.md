@@ -70,3 +70,43 @@ novo.
 **Sugestão em aberto (não feita):** apagar o comprovante depois que a solicitação é aprovada ou
 rejeitada — guardar documento de identidade só pelo tempo necessário é o que a LGPD pede. Depende
 de decisão do Sandro sobre quanto tempo manter.
+
+---
+
+## 2026-10-10 — Limites e captcha no cadastro e no "esqueci a senha" (PG3)
+
+**Contexto:** cadastro, "esqueci a senha" e reenvio da verificação mandam e-mail para um
+endereço digitado por qualquer pessoa. Sem limite nem captcha, um robô usa o SMTP do sistema para
+disparar e-mails a terceiros — e a conta (`contato@vipti.com.br`) é a mesma do T.E.D.: um
+bloqueio da Locaweb derruba o e-mail dos dois sistemas.
+
+**Decisão:** o mesmo desenho já publicado no T.E.D., adaptado ao PO.
+
+- **Limites** (`FortifyServiceProvider`): `cadastro` (5/h por IP e 30/h no sistema todo — este
+  não depende do IP), `recuperacao-senha` (3/h por e-mail, 10/h por IP, 50/h no sistema; o
+  Laravel já segura 1/min por endereço) e `verificacao` (2/min e 6/h por usuário; o padrão do
+  Fortify era 6/min). O Fortify não tem opção de limite para cadastro e recuperação: entram pelo
+  middleware `LimitarEnviosDaAutenticacao`, no grupo de rotas do Fortify.
+- **Captcha do Cloudflare (Turnstile)** no cadastro e no "esqueci a senha"
+  (`VerificarCaptcha`, `App\Support\Turnstile`): o token é conferido pelo **servidor**, então um
+  robô que acesse a Locaweb direto, sem o Cloudflare, não passa. Com o Cloudflare fora do ar, os
+  dois são **recusados**. O login fica de fora por enquanto — entra com o PG1 (no T.E.D. o login
+  é aceito quando o Cloudflare está fora).
+- **Na tela:** `components/CaptchaCloudflare.vue`. O widget cria sozinho o campo escondido
+  `cf-turnstile-response` dentro do `<Form>` do Inertia, então o token vai junto no envio; depois
+  de cada envio (`@finish`) o widget gera outro token, porque cada um vale uma vez só.
+- **Resposta dos limites:** em vez do 429 cru, volta para a tela com a mensagem no campo ou num
+  aviso (toast) — `App\Support\RespostaDeLimite`. O `AuthLayout` passou a ter o `<Toaster />`,
+  para o aviso aparecer também nas telas de login, cadastro e verificação.
+- **Chaves:** `TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` (sem as duas, o captcha fica
+  desligado). Reais no `.Producao_acessos` (widget de `po.vipti.com.br`, criado pelo Sandro em
+  10/10/2026; secreta conferida com o Cloudflare sem ser exibida). No `.env` local, as chaves de
+  teste do Cloudflare (sempre passam); nos testes automatizados, desligado pelo `phpunit.xml`.
+
+**Testes:** `tests/Feature/Auth/SegurancaEnviosDeEmailTest.php` (13: limites de cadastro por IP
+e geral, "esqueci a senha" por e-mail, reenvio da verificação, captcha válido, inválido, ausente
+e com o Cloudflare fora do ar, chave pública chegando às telas, captcha desligado sem chaves, login
+ainda sem captcha). Larastan e Pint nos arquivos novos; `vue-tsc` e build do front-end.
+
+**Pendente:** publicar (o `.env` do servidor precisa receber as duas chaves).
+

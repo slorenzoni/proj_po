@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Support\RespostaDeLimite;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -90,5 +91,40 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($throttleKey);
         });
 
+        $email = fn (Request $request): string => Str::transliterate(Str::lower(trim((string) $request->input('email'))));
+
+        // SEGURANCA.md, PG3: cadastro e "esqueci a senha" mandam e-mail para um endereço digitado
+        // por qualquer um — sem limite, o SMTP (o mesmo do T.E.D.) vira relé de spam. Cada limite tem
+        // chave própria; o teto geral não depende do IP (vale mesmo com IP falsificado).
+        RateLimiter::for('cadastro', function (Request $request) {
+            $resposta = RespostaDeLimite::noCampo('email', 'Muitos cadastros em pouco tempo. Tente novamente em :tempo.');
+
+            return [
+                Limit::perHour(5)->by('cadastro-ip:'.$request->ip())->response($resposta),
+                Limit::perHour(30)->by('cadastro-geral')->response($resposta),
+            ];
+        });
+
+        // O próprio Laravel já segura 1 e-mail por minuto para o mesmo endereço (config/auth.php).
+        RateLimiter::for('recuperacao-senha', function (Request $request) use ($email) {
+            $resposta = RespostaDeLimite::noCampo('email', 'Muitos pedidos de redefinição de senha. Tente novamente em :tempo.');
+
+            return [
+                Limit::perHour(3)->by('recuperacao-email:'.$email($request))->response($resposta),
+                Limit::perHour(10)->by('recuperacao-ip:'.$request->ip())->response($resposta),
+                Limit::perHour(50)->by('recuperacao-geral')->response($resposta),
+            ];
+        });
+
+        // Verificação de e-mail: o Fortify usa o mesmo limitador no reenvio e no clique do link.
+        RateLimiter::for('verificacao', function (Request $request) {
+            $quem = $request->user()?->id ?: $request->ip();
+            $resposta = RespostaDeLimite::noAviso('O e-mail de verificação foi pedido há pouco. Tente novamente em :tempo.');
+
+            return [
+                Limit::perMinute(2)->by('verificacao-min:'.$quem)->response($resposta),
+                Limit::perHour(6)->by('verificacao-hora:'.$quem)->response($resposta),
+            ];
+        });
     }
 }

@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    // Captcha do Cloudflare (Turnstile) no cadastro e no "esqueci a senha" — ver
+    // App\Support\Turnstile e SEGURANCA.md (PG3). site_key é pública (vai para a tela);
+    // secret_key só no servidor. Sem as duas chaves o captcha fica DESLIGADO (testes).
+    // Local: chaves de teste do Cloudflare, que sempre passam
+    // (1x00000000000000000000AA / 1x0000000000000000000000000000000AA).
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
 ];

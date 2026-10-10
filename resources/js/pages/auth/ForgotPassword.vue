@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import CaptchaCloudflare from '@/components/CaptchaCloudflare.vue';
 import InputError from '@/components/InputError.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
@@ -8,6 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
+
+// O token do captcha só vale uma vez: depois de cada envio, gera outro.
+const captcha = ref<InstanceType<typeof CaptchaCloudflare> | null>(null);
 
 defineOptions({
     layout: {
@@ -33,7 +38,11 @@ defineProps<{
     </div>
 
     <div class="space-y-6">
-        <Form v-bind="email.form()" v-slot="{ errors, processing }">
+        <Form
+            v-bind="email.form()"
+            v-slot="{ errors, processing }"
+            @finish="captcha?.reiniciar()"
+        >
             <div class="grid gap-2">
                 <Label for="email">E-mail</Label>
                 <Input
@@ -45,6 +54,11 @@ defineProps<{
                     placeholder="email@example.com"
                 />
                 <InputError :message="errors.email" />
+            </div>
+
+            <div class="mt-4">
+                <!-- Captcha do Cloudflare (SEGURANCA.md, PG3) -->
+                <CaptchaCloudflare ref="captcha" :erro="errors['cf-turnstile-response']" />
             </div>
 
             <div class="my-6 flex items-center justify-start">

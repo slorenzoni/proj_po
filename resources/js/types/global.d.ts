@@ -20,6 +20,8 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            /** Chave pública do captcha do Cloudflare; null = captcha desligado. */
+            captchaSiteKey: string | null;
             [key: string]: unknown;
         };
     }

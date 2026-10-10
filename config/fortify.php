@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\LimitarEnviosDaAutenticacao;
+use App\Http\Middleware\VerificarCaptcha;
 use Laravel\Fortify\Features;
 
 return [
@@ -101,7 +103,9 @@ return [
     |
     */
 
-    'middleware' => ['web'],
+    // Limite e captcha no cadastro e no "esqueci a senha" (o Fortify não tem opção para
+    // essas rotas) — SEGURANCA.md, PG3. Limite antes do captcha: tentativa sem captcha conta.
+    'middleware' => ['web', LimitarEnviosDaAutenticacao::class, VerificarCaptcha::class],
 
     /*
     |--------------------------------------------------------------------------
@@ -117,6 +121,8 @@ return [
     'limiters' => [
         'login' => 'login',
         'two-factor' => 'two-factor',
+        // Reenvio e clique da verificação de e-mail (o padrão do Fortify era '6,1').
+        'verification' => 'verificacao',
     ],
 
     /*

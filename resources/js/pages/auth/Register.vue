@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import CaptchaCloudflare from '@/components/CaptchaCloudflare.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -15,6 +17,9 @@ defineProps<{
     passwordRules: string;
 }>();
 
+// O token do captcha só vale uma vez: depois de cada envio, gera outro.
+const captcha = ref<InstanceType<typeof CaptchaCloudflare> | null>(null);
+
 defineOptions({
     layout: {
         title: 'Crie sua conta',
@@ -29,6 +34,7 @@ defineOptions({
     <Form
         v-bind="store.form()"
         :reset-on-success="['password', 'password_confirmation']"
+        @finish="captcha?.reiniciar()"
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
@@ -102,6 +108,9 @@ defineOptions({
                 </Label>
                 <InputError :message="errors.maior_de_18" />
             </div>
+
+            <!-- Captcha do Cloudflare (SEGURANCA.md, PG3) -->
+            <CaptchaCloudflare ref="captcha" :erro="errors['cf-turnstile-response']" />
 
             <Button
                 type="submit"
