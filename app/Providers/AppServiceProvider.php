@@ -4,12 +4,16 @@ namespace App\Providers;
 
 use App\Enums\AreaAdmin;
 use App\Models\User;
+use App\Support\RespostaDeLimite;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -29,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configurarLimitesGerais();
         $this->configureDefaults();
         $this->registerBlueprintMacros();
         $this->registerGates();
@@ -69,6 +74,27 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Autorizações globais.
      */
+    /**
+     * Limites gerais (SEGURANCA.md, PM4): as telas logadas por usuário, e o palpite e o placar
+     * dos fãs (que não tinham limite nenhum; comentários e dicas já têm 10/min nas rotas).
+     */
+    protected function configurarLimitesGerais(): void
+    {
+        $quem = fn (Request $request): string => (string) ($request->user()?->id ?: $request->ip());
+
+        // Uso normal fica muito abaixo disso; serve para frear robô ou script.
+        RateLimiter::for('usuario', fn (Request $request) => Limit::perMinute(120)->by('usuario:'.$quem($request)));
+
+        RateLimiter::for('votos', function (Request $request) use ($quem) {
+            $resposta = RespostaDeLimite::noAviso('Muitos envios em pouco tempo. Tente novamente em :tempo.');
+
+            return [
+                Limit::perMinute(20)->by('votos-min:'.$quem($request))->response($resposta),
+                Limit::perHour(300)->by('votos-hora:'.$quem($request))->response($resposta),
+            ];
+        });
+    }
+
     protected function registerGates(): void
     {
         Gate::define('acessar-admin', fn (User $user): bool => $user->isAdministrador());

@@ -295,7 +295,10 @@ Vite, o servidor recebe só o JS compilado). Rodar após cada `composer require`
 | PG2 | Aberto | Trocar e-mail e senha do admin e ativar duas etapas (sem código). |
 | PG3 | **Corrigido** — no código, ainda não publicado | Limites: cadastro 5/h por IP e 30/h no sistema; "esqueci a senha" 3/h por e-mail, 10/h por IP e 50/h no sistema; reenvio da verificação 2/min e 6/h por usuário. Captcha do Cloudflare (Turnstile) no cadastro e no "esqueci a senha", conferido pelo servidor; com o Cloudflare fora do ar, os dois são recusados. O captcha do login entra com o PG1. |
 | PG4 | **Corrigido** — no código, ainda não publicado | Comprovantes da verificação passaram para o disco privado (`storage/app/private`), entregues só pela rota protegida do painel. Em produção havia 0 comprovantes, então nada a migrar. |
-| PM1–PM4 | Aberto | — |
+| PM1 | Aberto | Cabeçalhos de segurança e CSP — próximo; levantar antes tudo o que as páginas carregam (fontes, YouTube, imagens, captcha). |
+| PM2 | **Corrigido** — no código, ainda não publicado | `X-Powered-By` removido (middleware global `CabecalhosDeSeguranca`, que vai receber os cabeçalhos do PM1). |
+| PM3 | **Corrigido** — no código, ainda não publicado | "Esqueci a senha" responde igual para e-mail com e sem conta, inclusive no pedido repetido em menos de 1 minuto (`PedidoDeRedefinicaoNaoAtendido`). O cadastro ainda revela e-mail já usado — aceito, mitigado por captcha e limites. |
+| PM4 | **Corrigido** — no código, ainda não publicado | 120 requisições/min por usuário nas telas logadas (site, configurações e painel); palpite e placar dos fãs: 20/min e 300/h por usuário, com aviso (toast). |
 
 ### 4.1 Graves
 

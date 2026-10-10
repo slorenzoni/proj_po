@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Http\Responses\PedidoDeRedefinicaoNaoAtendido;
 use App\Support\RespostaDeLimite;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse as FailedPasswordResetLinkRequestResponseContract;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -22,7 +24,9 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // "Esqueci a senha" não revela se o e-mail tem conta (SEGURANCA.md, PM3). bind (não
+        // singleton): o Fortify cria a resposta passando o status.
+        $this->app->bind(FailedPasswordResetLinkRequestResponseContract::class, PedidoDeRedefinicaoNaoAtendido::class);
     }
 
     /**

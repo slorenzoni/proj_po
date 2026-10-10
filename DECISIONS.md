@@ -145,3 +145,29 @@ comportamento novo. O teste provisório "login ainda não passa pelo captcha" sa
 
 **Se a hospedagem mudar:** refazer o diagnóstico de IP antes de mexer na regra de proxies.
 
+---
+
+## 2026-10-10 — Itens médios PM2, PM3 e PM4
+
+Pedido do Sandro: fazer agora o PM2, o PM3 e o PM4; o PM1 (cabeçalhos e CSP) fica para depois.
+
+- **PM2 — versão do PHP exposta:** middleware global `CabecalhosDeSeguranca` (em
+  `bootstrap/app.php`) remove o `X-Powered-By: PHP/8.5.7`. O `expose_php` não pode ser desligado
+  na hospedagem compartilhada. É nesse middleware que entram os cabeçalhos do PM1.
+- **PM3 — descobrir quem tem conta:** `App\Http\Responses\PedidoDeRedefinicaoNaoAtendido`
+  (ligado no `FortifyServiceProvider`) responde ao "esqueci a senha" de e-mail inexistente — e ao
+  pedido repetido em menos de 1 minuto, que o Laravel só segura para e-mail existente — exatamente
+  como no sucesso. Frase nova em `lang/pt_BR/passwords.php` ('sent'): "Se este e-mail estiver
+  cadastrado, enviamos...". Não tratado: o cadastro diz que o e-mail já está em uso — aceito
+  (corrigir mudaria o fluxo de cadastro); captcha e limites deixam a varredura cara.
+- **PM4 — limites gerais** (`AppServiceProvider::configurarLimitesGerais`): `throttle:usuario`
+  (120/min por usuário) nos grupos logados do site, das configurações e do painel; `throttle:votos`
+  (20/min e 300/h por usuário) no palpite e no placar dos fãs, que não tinham limite (comentários e
+  dicas já tinham 10/min). O limite geral devolve a página 429; o dos votos volta para a luta com
+  um aviso (toast).
+
+**Testes:** `tests/Feature/SegurancaMediosTest.php` (7: sem `X-Powered-By`, resposta igual com e
+sem conta, pedido repetido, e-mail inválido recusado, 120/min por usuário sem afetar outro
+usuário, limites do palpite e do placar dos fãs com o aviso). Larastan e Pint nos arquivos
+alterados.
+

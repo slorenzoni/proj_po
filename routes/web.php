@@ -31,11 +31,16 @@ Route::get('ranking/organizacoes/{organizacao}', [RankingController::class, 'org
 
 Route::get('banners/{banner}/clique', BannerCliqueController::class)->name('banners.clique');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// throttle:usuario — limite geral por usuário nas telas logadas (SEGURANCA.md, PM4).
+Route::middleware(['auth', 'verified', 'throttle:usuario'])->group(function () {
     Route::get('dashboard', PainelController::class)->name('dashboard');
 
-    Route::post('lutas/{luta}/palpite', [PalpiteController::class, 'store'])->name('palpites.store');
-    Route::post('lutas/{luta}/placar-dos-fans', [PlacarFanController::class, 'store'])->name('placar-dos-fans.store');
+    Route::post('lutas/{luta}/palpite', [PalpiteController::class, 'store'])
+        ->middleware('throttle:votos')
+        ->name('palpites.store');
+    Route::post('lutas/{luta}/placar-dos-fans', [PlacarFanController::class, 'store'])
+        ->middleware('throttle:votos')
+        ->name('placar-dos-fans.store');
     Route::post('lutas/{luta}/comentarios', [ComentarioController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('comentarios.store');

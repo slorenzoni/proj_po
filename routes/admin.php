@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Route;
 | Dentro dele, cada área é liberada pelo nível de acesso (gates "admin.*", ver NivelAcesso::areas()).
 | Os nomes de parâmetro são explícitos porque o singular automático do Laravel é em inglês.
 */
-Route::middleware(['auth', 'verified', 'can:acessar-admin'])
+Route::middleware(['auth', 'verified', 'can:acessar-admin', 'throttle:usuario']) // throttle: SEGURANCA.md, PM4
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
