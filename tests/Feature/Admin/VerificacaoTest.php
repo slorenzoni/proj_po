@@ -74,10 +74,24 @@ test('a request that was already analysed cannot be analysed again', function ()
 });
 
 test('the proof document is downloaded through the protected route', function () {
-    $caminho = UploadedFile::fake()->create('rg.pdf', 20)->store('verificacoes', 'public');
+    Storage::fake(SolicitacaoVerificacao::DISCO_DOCUMENTO);
+    $caminho = UploadedFile::fake()->create('rg.pdf', 20)->store('verificacoes', SolicitacaoVerificacao::DISCO_DOCUMENTO);
     $solicitacao = SolicitacaoVerificacao::factory()->create(['documento_url' => $caminho]);
 
     $this->get(route('admin.verificacoes.documento', $solicitacao))->assertOk()->assertDownload();
+});
+
+/**
+ * SEGURANCA.md, PG4 (10/10/2026): o comprovante pode ser documento de identidade e fica no
+ * disco privado. Um arquivo deixado no disco público (onde ficava antes) não é entregue.
+ */
+test('the proof document is not read from the public media disk', function () {
+    Storage::fake('public');
+    Storage::fake(SolicitacaoVerificacao::DISCO_DOCUMENTO);
+    $caminho = UploadedFile::fake()->create('rg.pdf', 20)->store('verificacoes', 'public');
+    $solicitacao = SolicitacaoVerificacao::factory()->create(['documento_url' => $caminho]);
+
+    $this->get(route('admin.verificacoes.documento', $solicitacao))->assertNotFound();
 });
 
 test('a missing proof document returns not found', function () {

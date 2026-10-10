@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $uuid
  * @property int $user_id
- * @property string $documento_url Caminho do arquivo no disco de mídia, não a URL completa.
+ * @property string $documento_url Caminho do arquivo no disco PRIVADO (DISCO_DOCUMENTO), não uma URL.
  * @property string|null $descricao
  * @property StatusSolicitacaoVerificacao $status
  * @property string|null $motivo_rejeicao
@@ -44,6 +44,15 @@ class SolicitacaoVerificacao extends Model
 {
     /** @use HasFactory<SolicitacaoVerificacaoFactory> */
     use Auditable, HasFactory, HasPublicUuid, SoftDeletes;
+
+    /**
+     * Disco do comprovante enviado na verificação (pode ser documento de identidade).
+     * PRIVADO de propósito (storage/app/private, fora da pasta pública): antes ia
+     * para o disco de mídia, publicado em /storage — quem tivesse o nome do arquivo
+     * abria o documento sem login (SEGURANCA.md, PG4, 10/10/2026). Só sai pela rota
+     * protegida do painel (Admin\VerificacaoController::documento).
+     */
+    public const DISCO_DOCUMENTO = 'local';
 
     /**
      * Quem pediu o selo.

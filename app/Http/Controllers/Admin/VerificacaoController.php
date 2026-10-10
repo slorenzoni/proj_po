@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\StatusSolicitacaoVerificacao;
 use App\Models\SolicitacaoVerificacao;
-use App\Services\MediaStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -50,11 +50,13 @@ class VerificacaoController extends AdminController
      * O comprovante pode conter documento pessoal: é entregue só por esta rota
      * protegida, nunca por URL pública do disco.
      */
-    public function documento(SolicitacaoVerificacao $solicitacao, MediaStorage $media): StreamedResponse
+    public function documento(SolicitacaoVerificacao $solicitacao): StreamedResponse
     {
-        abort_unless($media->disk()->exists($solicitacao->documento_url), 404);
+        $disco = Storage::disk(SolicitacaoVerificacao::DISCO_DOCUMENTO);
 
-        return $media->disk()->download($solicitacao->documento_url);
+        abort_unless($disco->exists($solicitacao->documento_url), 404);
+
+        return $disco->download($solicitacao->documento_url);
     }
 
     public function aprovar(Request $request, SolicitacaoVerificacao $solicitacao): RedirectResponse

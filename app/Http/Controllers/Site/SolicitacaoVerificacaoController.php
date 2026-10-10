@@ -6,7 +6,6 @@ use App\Enums\StatusSolicitacaoVerificacao;
 use App\Http\Controllers\Controller;
 use App\Models\SolicitacaoVerificacao;
 use App\Models\User;
-use App\Services\MediaStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -41,7 +40,7 @@ class SolicitacaoVerificacaoController extends Controller
         ]);
     }
 
-    public function store(Request $request, MediaStorage $media): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -58,7 +57,8 @@ class SolicitacaoVerificacaoController extends Controller
 
         SolicitacaoVerificacao::query()->create([
             'user_id' => $user->id,
-            'documento_url' => $media->store($request->file('documento'), self::PASTA),
+            // Disco privado: o comprovante pode ser documento de identidade (ver SolicitacaoVerificacao::DISCO_DOCUMENTO).
+            'documento_url' => $request->file('documento')->store(self::PASTA, SolicitacaoVerificacao::DISCO_DOCUMENTO),
             'descricao' => $dados['descricao'] ?? null,
             'status' => StatusSolicitacaoVerificacao::Pendente,
         ]);

@@ -109,6 +109,7 @@ test('the client panel summarises the score and lists only the own picks', funct
 
 test('a member requests the verified badge once at a time', function () {
     Storage::fake('public');
+    Storage::fake(SolicitacaoVerificacao::DISCO_DOCUMENTO);
     $user = membro();
 
     $this->actingAs($user)->post(route('verificacao.store'), [
@@ -122,7 +123,9 @@ test('a member requests the verified badge once at a time', function () {
         ->user_id->toBe($user->id)
         ->status->toBe(StatusSolicitacaoVerificacao::Pendente);
 
-    Storage::disk('public')->assertExists($solicitacao->documento_url);
+    // SEGURANCA.md, PG4: o comprovante fica no disco privado, nunca no público (/storage).
+    Storage::disk(SolicitacaoVerificacao::DISCO_DOCUMENTO)->assertExists($solicitacao->documento_url);
+    Storage::disk('public')->assertMissing($solicitacao->documento_url);
 
     $this->actingAs($user)->post(route('verificacao.store'), [
         'documento' => UploadedFile::fake()->create('outro.pdf', 100, 'application/pdf'),

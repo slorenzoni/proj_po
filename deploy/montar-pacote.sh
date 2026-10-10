@@ -22,7 +22,8 @@ git ls-files -z --cached --others --exclude-standard | while IFS= read -r -d '' 
 done
 cp -r public/build "$PACOTE/po_app/public/build"
 
-for pasta in storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
+# storage/app/private: comprovantes da verificacao (disco privado - SEGURANCA.md, PG4).
+for pasta in storage/app/private storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache; do
     mkdir -p "$PACOTE/po_app/$pasta"
 done
 
