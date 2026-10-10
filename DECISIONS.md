@@ -110,3 +110,38 @@ ainda sem captcha). Larastan e Pint nos arquivos novos; `vue-tsc` e build do fro
 
 **Pendente:** publicar (o `.env` do servidor precisa receber as duas chaves).
 
+---
+
+## 2026-10-10 — Limite de login por e-mail, captcha no login e IP real (PG1)
+
+**Contexto:** o limite de login contava e-mail + IP, e o sistema confiava em qualquer proxy
+(`trustProxies(at: '*')`). Como a Locaweb responde direto pelo IP, sem passar pelo Cloudflare,
+quem acessasse por ali podia mandar um `X-Forwarded-For` falso a cada tentativa e zerar o limite
+— e também fugir da proteção do Cloudflare.
+
+**Decisão:** o mesmo desenho já publicado no T.E.D.
+
+- **Limite só por e-mail** (`FortifyServiceProvider`, limitador `login`): além de 5/min por
+  e-mail + IP, 20/h por e-mail. Trocar de IP não adianta. Efeito colateral aceito: 20 senhas
+  erradas numa hora travam aquele e-mail por até 1 hora, mesmo para o dono. Ao estourar, volta
+  para o login com a mensagem no campo (antes: 429 cru).
+- **Captcha do Cloudflare no login** (`VerificarCaptcha`, rota `login.store`, e a tela
+  `pages/auth/Login.vue`). Com o Cloudflare fora do ar o login é **aceito** (ninguém fica
+  trancado; o limite por e-mail continua valendo) — "fora do ar" é a chamada do servidor ao
+  Cloudflare que falha, nunca token vazio.
+- **IP real:** `trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_PROTO)` em
+  `bootstrap/app.php` — confia no proxy só para o protocolo. Base: o diagnóstico feito no T.E.D.
+  (mesmo servidor e mesmo proxy da Locaweb), em que o `REMOTE_ADDR` já é o IP real pelo
+  Cloudflare e direto, e o `X-Forwarded-For` chega falsificado no acesso direto. Vale para os
+  limites por IP e para o IP gravado na auditoria (`AuditContext`).
+
+**Testes:** `tests/Feature/Auth/SegurancaLoginTest.php` (10: bloqueio por e-mail trocando de IP
+a cada tentativa, 5/min do mesmo IP, `X-Forwarded-For` falso ignorado, IPv6 mantido, limite por
+IP não furado pelo cabeçalho, captcha válido, inválido e ausente, Cloudflare fora do ar e com
+erro 5xx, chave pública na tela). O teste do kit inicial `users are rate limited`
+(`AuthenticationTest`) dependia do formato interno da chave e do 429 — foi reescrito para o
+comportamento novo. O teste provisório "login ainda não passa pelo captcha" saiu do
+`SegurancaEnviosDeEmailTest`.
+
+**Se a hospedagem mudar:** refazer o diagnóstico de IP antes de mexer na regra de proxies.
+

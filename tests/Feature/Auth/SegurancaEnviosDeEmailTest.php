@@ -196,13 +196,3 @@ test('"esqueci a senha" com captcha válido envia o link', function () {
 
     Notification::assertSentTo($user, ResetPassword::class);
 });
-
-test('login ainda não passa pelo captcha (entra com o PG1)', function () {
-    captchaLigado();
-    cloudflareResponde(false);
-    $user = User::factory()->create();
-
-    $this->post(route('login.store'), ['email' => $user->email, 'password' => 'password']);
-
-    $this->assertAuthenticatedAs($user);
-});

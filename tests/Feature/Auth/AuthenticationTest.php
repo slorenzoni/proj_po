@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
 
 test('login screen can be rendered', function () {
@@ -63,15 +62,23 @@ test('users can logout', function () {
     $this->assertGuest();
 });
 
+// SEGURANCA.md, PG1 (10/10/2026): o limite passou a ter duas chaves (e-mail + IP e só e-mail) e,
+// ao estourar, volta para o login com a mensagem no campo em vez do 429 cru.
 test('users are rate limited', function () {
     $user = User::factory()->create();
 
-    RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+    foreach (range(1, 5) as $i) {
+        $this->from(route('login'))->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ]);
+    }
 
-    $response = $this->post(route('login.store'), [
+    $response = $this->from(route('login'))->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'wrong-password',
     ]);
 
-    $response->assertTooManyRequests();
+    $response->assertRedirect(route('login'))->assertSessionHasErrors('email');
+    expect(session('errors')->first('email'))->toContain('Muitas tentativas');
 });

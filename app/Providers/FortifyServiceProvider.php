@@ -85,13 +85,20 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-        RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
-
-            return Limit::perMinute(5)->by($throttleKey);
-        });
-
         $email = fn (Request $request): string => Str::transliterate(Str::lower(trim((string) $request->input('email'))));
+
+        // SEGURANCA.md, PG1: o limite antigo contava só e-mail + IP, e com a origem acessível sem o
+        // Cloudflare o IP podia ser falsificado — cada "IP novo" zerava a conta. O segundo limite é
+        // SÓ por e-mail: trocar de IP não adianta. Efeito colateral aceito (o mesmo do T.E.D.): 20
+        // senhas erradas numa hora travam aquele e-mail por até 1 hora, mesmo para o dono.
+        RateLimiter::for('login', function (Request $request) use ($email) {
+            $resposta = RespostaDeLimite::noCampo(Fortify::username(), 'Muitas tentativas de entrar com este e-mail. Tente novamente em :tempo.');
+
+            return [
+                Limit::perMinute(5)->by('login-ip:'.$email($request).'|'.$request->ip())->response($resposta),
+                Limit::perHour(20)->by('login-email:'.$email($request))->response($resposta),
+            ];
+        });
 
         // SEGURANCA.md, PG3: cadastro e "esqueci a senha" mandam e-mail para um endereço digitado
         // por qualquer um — sem limite, o SMTP (o mesmo do T.E.D.) vira relé de spam. Cada limite tem

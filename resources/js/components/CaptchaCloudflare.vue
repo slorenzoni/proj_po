@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 
 /**
- * Captcha do Cloudflare (Turnstile) no cadastro e no "esqueci a senha" (SEGURANCA.md, PG3).
+ * Captcha do Cloudflare (Turnstile) no login (PG1), no cadastro e no "esqueci a senha" (PG3) — SEGURANCA.md.
  *
  * O widget cria sozinho, dentro desta caixa, o campo escondido `cf-turnstile-response` com o
  * token; como a caixa fica dentro do <Form> da tela, o token vai junto no envio. Quem confere é
@@ -84,7 +84,7 @@ onMounted(async () => {
         });
     } catch {
         // Cloudflare fora do ar ou bloqueado no navegador: o formulário segue sem token e o
-        // servidor decide (cadastro e recuperação de senha recusam).
+        // servidor decide (login aceita; cadastro e recuperação de senha recusam).
         falhouAoCarregar.value = true;
     }
 });

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import CaptchaCloudflare from '@/components/CaptchaCloudflare.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -11,6 +13,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
+
+// O token do captcha só vale uma vez: depois de cada envio (senha errada, por exemplo), gera outro.
+const captcha = ref<InstanceType<typeof CaptchaCloudflare> | null>(null);
 
 defineOptions({
     layout: {
@@ -38,6 +43,7 @@ defineProps<{
     <Form
         v-bind="store.form()"
         :reset-on-success="['password']"
+        @finish="captcha?.reiniciar()"
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
@@ -86,6 +92,9 @@ defineProps<{
                     <span>Lembrar de mim</span>
                 </Label>
             </div>
+
+            <!-- Captcha do Cloudflare (SEGURANCA.md, PG1) -->
+            <CaptchaCloudflare ref="captcha" :erro="errors['cf-turnstile-response']" />
 
             <Button
                 type="submit"

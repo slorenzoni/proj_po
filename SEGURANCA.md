@@ -291,7 +291,7 @@ Vite, o servidor recebe só o JS compilado). Rodar após cada `composer require`
 
 | Item | Status | O que foi feito / o que falta |
 | --- | --- | --- |
-| PG1 | Aberto | — |
+| PG1 | **Corrigido** — no código, ainda não publicado | Limite de login também só por e-mail (20/h), além de e-mail + IP (5/min); captcha do Cloudflare no login (aceito se o Cloudflare estiver fora do ar); `trustProxies` confiando só no protocolo — um `X-Forwarded-For` falso não muda mais o IP. Opcional: regra de limite no Cloudflare. |
 | PG2 | Aberto | Trocar e-mail e senha do admin e ativar duas etapas (sem código). |
 | PG3 | **Corrigido** — no código, ainda não publicado | Limites: cadastro 5/h por IP e 30/h no sistema; "esqueci a senha" 3/h por e-mail, 10/h por IP e 50/h no sistema; reenvio da verificação 2/min e 6/h por usuário. Captcha do Cloudflare (Turnstile) no cadastro e no "esqueci a senha", conferido pelo servidor; com o Cloudflare fora do ar, os dois são recusados. O captcha do login entra com o PG1. |
 | PG4 | **Corrigido** — no código, ainda não publicado | Comprovantes da verificação passaram para o disco privado (`storage/app/private`), entregues só pela rota protegida do painel. Em produção havia 0 comprovantes, então nada a migrar. |

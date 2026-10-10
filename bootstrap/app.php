@@ -19,7 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Na Locaweb o HTTPS termina num proxy antes do PHP: confiar nos cabeçalhos X-Forwarded-*
         // para o Laravel saber o protocolo e o IP real do visitante (usado na auditoria).
-        $middleware->trustProxies(at: '*');
+        //
+        // Corrigido em 10/10/2026 (SEGURANCA.md, PG1): confia SÓ no protocolo, nunca no IP.
+        // Diagnóstico feito no T.E.D. (mesmo servidor e mesmo proxy): a Locaweb já entrega o IP
+        // real no REMOTE_ADDR, pelo Cloudflare e direto; o X-Forwarded-For, no acesso direto,
+        // chega como o visitante mandou. Com '*' em todos os cabeçalhos, um IP falso ali virava o
+        // request()->ip() e furava os limites por IP e a auditoria.
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_PROTO);
 
         $middleware->web(append: [
             HandleAppearance::class,
