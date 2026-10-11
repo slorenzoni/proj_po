@@ -73,6 +73,16 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Relatos de violação de CSP (CspRelatorioController), separados do log de erros. Nível
+        // fixo: precisa gravar mesmo com LOG_LEVEL=error em produção (SEGURANCA.md, PM1).
+        'csp' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/csp.log'),
+            'level' => 'warning',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
         'monthly' => [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),

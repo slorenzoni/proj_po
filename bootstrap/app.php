@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        // Relatos de CSP (SEGURANCA.md, PM1): rota sem sessão e sem CSRF.
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -28,8 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // request()->ip() e furava os limites por IP e a auditoria.
         $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_PROTO);
 
-        // Cabeçalhos de segurança em toda resposta (SEGURANCA.md, PM2; depois o PM1).
+        // Cabeçalhos de segurança e CSP em toda resposta (SEGURANCA.md, PM1 e PM2) e limite na
+        // API (limitador 'api' no AppServiceProvider).
         $middleware->append(CabecalhosDeSeguranca::class);
+        $middleware->throttleApi();
 
         $middleware->web(append: [
             HandleAppearance::class,

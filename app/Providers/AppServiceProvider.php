@@ -85,6 +85,9 @@ class AppServiceProvider extends ServiceProvider
         // Uso normal fica muito abaixo disso; serve para frear robô ou script.
         RateLimiter::for('usuario', fn (Request $request) => Limit::perMinute(120)->by('usuario:'.$quem($request)));
 
+        // API: hoje só os relatos de CSP que o navegador manda (SEGURANCA.md, PM1).
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by('api:'.$quem($request)));
+
         RateLimiter::for('votos', function (Request $request) use ($quem) {
             $resposta = RespostaDeLimite::noAviso('Muitos envios em pouco tempo. Tente novamente em :tempo.');
 

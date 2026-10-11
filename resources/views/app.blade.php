@@ -5,7 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-        <script>
+        {{-- nonce: único script embutido da página, liberado pela CSP (SEGURANCA.md, PM1) --}}
+        <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
             (function() {
                 const appearance = '{{ $appearance ?? "system" }}';
 

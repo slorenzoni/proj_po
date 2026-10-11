@@ -171,3 +171,39 @@ sem conta, pedido repetido, e-mail inválido recusado, 120/min por usuário sem 
 usuário, limites do palpite e do placar dos fãs com o aviso). Larastan e Pint nos arquivos
 alterados.
 
+---
+
+## 2026-10-10 — Cabeçalhos de segurança e CSP (PM1)
+
+**Decisão:** o mesmo desenho já publicado no T.E.D., começando a CSP em **modo relatório** — o
+navegador não bloqueia nada, só relata; CSP errada quebra telas, então primeiro se observa (no
+T.E.D. o bloqueio chegou a ser ligado direto e foi desfeito minutos depois pelo Sandro, para
+observar antes).
+
+- **Onde:** middleware global `CabecalhosDeSeguranca` (o mesmo do PM2) e `config/seguranca.php`
+  (`CSP_MODO`: `relatorio`, `bloquear` ou `desligado`; `HSTS_SEGUNDOS`).
+- **Ativos de vez:** `X-Frame-Options: SAMEORIGIN` (e `frame-ancestors 'self'`),
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
+  `Permissions-Policy` (câmera, microfone, localização, pagamento e USB desligados) e HSTS de 1
+  ano, só em https, **sem** `includeSubDomains` e **sem** `preload`.
+- **A política:** levantada do que o PO usa de verdade em 10/10/2026 — as fontes são do próprio
+  site (`@fonts`, arquivos em `build/`), fotos e logos ficam no disco do próprio site (nenhuma
+  imagem com endereço externo, nem no banco local nem no de produção), e o YouTube aparece só
+  como link, sem vídeo embutido. A única origem externa é o captcha do Cloudflare
+  (`challenges.cloudflare.com`, em script, iframe e conexão). Scripts com **nonce** por
+  requisição: as tags do Vite e o único script embutido (o do modo escuro, em
+  `resources/views/app.blade.php`) saem com ele. Os blocos `<script type="application/json">`
+  do Inertia são dados, não código, e a CSP não se aplica a eles. Build sem `eval`.
+- **Relatos:** `POST /api/csp-relatorio` (`CspRelatorioController`) — o PO passou a ter
+  `routes/api.php` (sem sessão e sem CSRF; `throttleApi()` com o limitador `api`, 60/min), só
+  campos conhecidos e cortados, gravados no canal de log `csp` (14 dias).
+- **Desenvolvimento local:** com o Vite rodando, a política inclui o servidor dele (lido de
+  `public/hot`).
+
+**Testes:** `tests/Feature/CabecalhosDeSegurancaTest.php` (10: cabeçalhos, HSTS só em https e
+desligável, modos da CSP, só o captcha como origem externa, nonce igual na política e no script
+embutido e diferente a cada requisição, relato gravado no log e relato inválido ignorado).
+
+**Próximo passo:** publicar; depois de alguns dias de uso real, ler `storage/logs/csp-*.log` no
+servidor, ajustar `FONTES_EXTERNAS` se houver relato legítimo e ligar `CSP_MODO=bloquear`.
+
