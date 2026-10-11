@@ -34,7 +34,7 @@ O subdomínio é configurado no painel da Locaweb como "conteúdo de pasta" apon
 | Sem a liberação, o SSH **aceita a senha** e o comando termina sem erro e **sem nenhuma saída** (nada é executado) | Script de deploy que não devolve nada: conferir a liberação antes de investigar o script |
 | FTP (porta 21) funciona, mas sem TLS | Enviar arquivos por SSH/SCP (porta 22), que é criptografado |
 | E-mail pelo SMTP da Locaweb (`email-ssl.com.br`, porta **465**, conta `contato@vipti.com.br`, remetente "po - prime"), ativo desde 09/10/2026 | `MAIL_MAILER=smtp` com **`MAIL_SCHEME=smtps`** (a 465 já começa criptografada); o remetente tem de ser a própria conta autenticada. A mesma conta é usada pelo PROJ_TED |
-| HTTPS termina num proxy antes do PHP | `trustProxies(at: '*')` em `bootstrap/app.php` e `URL::forceScheme('https')` quando `APP_URL` é https — sem isso o login redireciona para `http` e a sessão se perde |
+| HTTPS termina num proxy antes do PHP | `trustProxies` confiando **só no protocolo** (`HEADER_X_FORWARDED_PROTO`) em `bootstrap/app.php` e `URL::forceScheme('https')` quando `APP_URL` é https — sem isso o login redireciona para `http` e a sessão se perde. O IP real do visitante já chega no `REMOTE_ADDR`; confiar no `X-Forwarded-For` deixaria qualquer um trocar o próprio IP (SEGURANCA.md, PG1) |
 | O Cloudflare tem de ficar em modo SSL/TLS **"Full"** (não "Flexible" nem "Full (strict)"); trocado em 09/10/2026 | Em "Flexible" ele fala com a Locaweb pela porta 80, o PHP recebe `X-Forwarded-Proto: http` e todo **link assinado** (verificação de e-mail, convite) dá **403 Invalid signature**, mesmo com o link em https — além de o trecho até a Locaweb trafegar sem criptografia. "Full (strict)" não serve: o certificado da Locaweb é genérico (`*.websiteseguro.com`) |
 | Banco MySQL **5.7** (local usa 8.4), com acesso externo | Migrations rodam do notebook; validar antes com `migrate --pretend` |
 | `zip` do PowerShell grava caminhos com `\` | Empacotar com `tar.gz` |
@@ -72,6 +72,10 @@ O `publicar.sh` não altera o `.env` do servidor nem as fotos enviadas pelo pain
 Com o SSH liberado, editar `~/po_app/.env` e depois rodar `php84 artisan config:cache` em
 `~/po_app`. O modelo está em `.env.production` (local, fora do Git, sem senhas).
 
+Variáveis da segurança (desde 10/10/2026): `TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` (captcha
+do Cloudflare; valores na seção `[Captcha Cloudflare (Turnstile)]` do `.Producao_acessos`),
+`CSP_MODO` (`relatorio`, `bloquear` ou `desligado`) e `HSTS_SEGUNDOS`.
+
 ## Primeiro deploy (09/10/2026) — registro
 
 1. `migrate --pretend` no banco da Locaweb para validar o MySQL 5.7.
@@ -87,7 +91,25 @@ Com o SSH liberado, editar `~/po_app/.env` e depois rodar `php84 artisan config:
    permissões, `ln -s` do storage, caches de configuração, rotas e telas.
 6. A página provisória "Estamos chegando" foi guardada em `~/tmp/em-breve-index.html`.
 
+## Publicação da segurança (10/10/2026) — registro
+
+Itens PG1, PG3, PG4 e PM1 a PM4 do `SEGURANCA.md`, num deploy só (pedido do Sandro).
+
+1. Sem migration nova (`migrate:status` sem pendentes).
+2. `.env` do servidor: cópia em `~/po_app/.env.antes-seguranca-20261010` (600) e inclusão das
+   chaves do captcha, `CSP_MODO=relatorio` e `HSTS_SEGUNDOS=31536000`. As chaves foram lidas do
+   `.Producao_acessos` e enviadas pela entrada do `ssh`, sem aparecer na tela.
+3. `montar-pacote.sh` (já cria `storage/app/private`, o disco dos comprovantes) e `publicar.sh`.
+4. Conferido em produção: `/`, `/login`, `/eventos` e `/up` com 200; em `/login` saem
+   `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS e a CSP em modo
+   relatório, sem `X-Powered-By`; a chave do captcha está em login, cadastro e "esqueci a
+   senha"; o script embutido sai com nonce; `POST /api/csp-relatorio` responde 204; log de erros
+   sem registros depois da publicação.
+
 ## Pendências de produção
+
+- **CSP:** depois de alguns dias de uso, ler `~/po_app/storage/logs/csp-*.log` e, sem relato
+  legítimo, trocar `CSP_MODO` para `bloquear` (e rodar `config:cache`).
 
 - **E-mail do administrador:** o admin usa `admin@email.com`, de um domínio que não é nosso
   (`email.com`). Com o SMTP ativo, um "esqueci minha senha" nessa conta envia o link de

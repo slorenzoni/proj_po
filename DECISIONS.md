@@ -207,3 +207,18 @@ embutido e diferente a cada requisição, relato gravado no log e relato inváli
 **Próximo passo:** publicar; depois de alguns dias de uso real, ler `storage/logs/csp-*.log` no
 servidor, ajustar `FONTES_EXTERNAS` se houver relato legítimo e ligar `CSP_MODO=bloquear`.
 
+---
+
+## 2026-10-10 — Publicação da segurança (PG1, PG3, PG4, PM1 a PM4)
+
+**Decisão:** publicar todos os itens de uma vez, a pedido do Sandro, em vez de um deploy por
+item como sugeria o plano do `SEGURANCA.md`. Os itens já tinham sido testados juntos (suíte
+completa em MySQL: 374 testes) e nenhum tinha migration.
+
+- O `.env` do servidor recebeu as chaves do captcha, `CSP_MODO=relatorio` e `HSTS_SEGUNDOS`,
+  com cópia do arquivo anterior guardada no servidor.
+- Conferência em produção e passos no `DEPLOY.md` ("Publicação da segurança").
+
+**Ficou para depois:** PG2 (e-mail, senha e duas etapas do admin — ação do Sandro), troca das
+senhas que passaram por conversa e ligar o bloqueio da CSP depois de ler os relatos.
+
