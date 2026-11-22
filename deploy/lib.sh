@@ -13,17 +13,20 @@ KNOWN_HOSTS="$HOME/.ssh/known_hosts_locaweb_po"
 
 [ -f "$ACESSOS" ] || { echo "Arquivo de acessos não encontrado: $ACESSOS" >&2; exit 1; }
 
+# PHP e Composer usados pelos scripts. Nenhum dos dois está no PATH do notebook, por isso
+# os caminhos são fixos aqui. A versão é a mesma do servidor (php84 na Locaweb), para que
+# o código rodado daqui contra a produção e o vendor do pacote batam com o de lá.
+# Para usar outro: PHP=/c/php/8.5/php.exe deploy/<script>.sh
+PHP="${PHP:-/c/php/8.4/php.exe}"
+COMPOSER_PHAR="${COMPOSER_PHAR:-/c/php/composer/composer.phar}"
+[ -x "$PHP" ] || { echo "PHP não encontrado: $PHP" >&2; exit 1; }
+# O plugin Wayfinder do build (npm run build) chama "php artisan" direto: põe este PHP no PATH.
+PATH="$(dirname "$PHP"):$PATH"
+export PHP COMPOSER_PHAR PATH
+composer() { "$PHP" "$COMPOSER_PHAR" "$@"; }
+
 # Lê um campo ("Host", "Usuário", "Senha"...) de uma seção do .Producao_acessos.
-acesso() {
-    python - "$ACESSOS" "$1" "$2" <<'EOF'
-import re, sys
-arquivo, secao, campo = sys.argv[1:]
-s = open(arquivo, encoding='utf-8').read()
-i = s.index('[' + secao)
-trecho = s[i:s.find('\n[', i + 1)]
-print(re.search(r'^' + re.escape(campo) + r':\s*(\S+)', trecho, re.M).group(1))
-EOF
-}
+acesso() { "$PHP" "$RAIZ/deploy/acesso.php" "$ACESSOS" "$1" "$2" | tr -d '\r'; }
 
 SSH_HOST="$(acesso 'Transferência' 'Host')"
 SSH_USUARIO="$(acesso 'Transferência' 'Usuário')"
@@ -37,6 +40,8 @@ SSH_OPCOES=(-o "UserKnownHostsFile=$KNOWN_HOSTS" -o StrictHostKeyChecking=accept
 # Avisos do OpenSSH sobre o servidor antigo da Locaweb, que não interessam.
 filtrar_avisos() { grep -v "post-quantum\|pq.html\|upgraded\|store now" || true; }
 
-no_servidor() { ssh "${SSH_OPCOES[@]}" "$SSH_USUARIO@$SSH_HOST" "$@" 2>&1 | filtrar_avisos; }
+# -n: o ssh não lê a entrada padrão. Sem isso ele fica parado esperando quando o script
+# roda sem terminal (por exemplo, chamado por outra ferramenta).
+no_servidor() { ssh -n "${SSH_OPCOES[@]}" "$SSH_USUARIO@$SSH_HOST" "$@" 2>&1 | filtrar_avisos; }
 
 enviar() { scp "${SSH_OPCOES[@]}" "$@" 2>&1 | filtrar_avisos; }

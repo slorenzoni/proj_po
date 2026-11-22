@@ -28,5 +28,5 @@ if [ "$alvo" = producao ]; then
     "$RAIZ/deploy/artisan-producao.sh" tinker --execute "$trava$1"
 else
     cd "$RAIZ"
-    php artisan tinker --execute "$trava$1"
+    "$PHP" artisan tinker --execute "$trava$1"
 fi

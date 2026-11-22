@@ -12,6 +12,12 @@ $aplicacao = '/home/storage/d/66/10/vipti2/po_app';
 
 define('LARAVEL_START', microtime(true));
 
+// Desde 16/11/2026 o PHP da Locaweb não consegue reservar memória executável para o JIT do
+// PCRE: o preg_match() emite "Allocation of JIT memory failed", o Laravel transforma o aviso em
+// exceção e a página dá 500 (a inicial "/" caía sempre). Sem o JIT as expressões regulares
+// continuam funcionando, só um pouco mais devagar.
+ini_set('pcre.jit', '0');
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = $aplicacao.'/storage/framework/maintenance.php')) {
     require $maintenance;

@@ -34,7 +34,7 @@ rm -f public/hot
 # A pasta public vira o conteúdo de public_html/po, com o index.php de produção.
 mv "$PACOTE/po_app/public" "$PACOTE/po"
 cp "$RAIZ/deploy/index.producao.php" "$PACOTE/po/index.php"
-php -l "$PACOTE/po/index.php" >/dev/null
+"$PHP" -l "$PACOTE/po/index.php" >/dev/null
 
 # tar.gz (o zip do PowerShell grava caminhos com "\" e quebra no Linux).
 tar -czf "$PACOTE/po_app.tar.gz" -C "$PACOTE/po_app" .

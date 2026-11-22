@@ -23,5 +23,5 @@ export DB_HOST DB_DATABASE DB_USERNAME DB_PASSWORD
 export APP_ENV=production APP_DEBUG=false QUEUE_CONNECTION=sync
 
 cd "$RAIZ"
-php artisan config:clear >/dev/null
-php artisan "$@"
+"$PHP" artisan config:clear >/dev/null
+"$PHP" artisan "$@"

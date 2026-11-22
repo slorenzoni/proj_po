@@ -48,9 +48,15 @@ O subdomínio é configurado no painel da Locaweb como "conteúdo de pasta" apon
 | `montar-pacote.sh` | Gera `po_app.tar.gz` e `po.tar.gz` em `C:\devfolder\proj_po_deploy` | Não |
 | `publicar.sh` | Envia os pacotes, descompacta, refaz link e caches, coloca no ar | Sim |
 | `copiar-cadastros-para-producao.php` | Cópia única dos cadastros locais (feita no primeiro deploy) | Não |
-| `lib.sh`, `askpass.sh` | Funções comuns e entrega da senha ao `ssh`/`scp` | — |
+| `lib.sh`, `askpass.sh`, `acesso.php` | Funções comuns, entrega da senha ao `ssh`/`scp` e leitura de um campo do `.Producao_acessos` | — |
 
-Os scripts rodam no Git Bash, a partir da raiz do projeto.
+Os scripts rodam no Git Bash, a partir da raiz do projeto. Não dependem de `php`, `composer`
+nem `python` no PATH: o `lib.sh` usa `C:\php\8.4\php.exe` (mesma versão do `php84` do servidor)
+e `C:\php\composer\composer.phar`, e põe esse PHP no PATH dos scripts (o plugin Wayfinder do
+`npm run build` chama `php artisan` direto). Para outro PHP: `PHP=/c/php/8.5/php.exe deploy/<script>.sh`.
+
+Fora dos scripts, o build manual também precisa do PHP no PATH:
+`PATH="/c/php/8.4:$PATH" npm run build`.
 
 ## Atualizar a produção
 
@@ -105,6 +111,16 @@ Itens PG1, PG3, PG4 e PM1 a PM4 do `SEGURANCA.md`, num deploy só (pedido do San
    relatório, sem `X-Powered-By`; a chave do captcha está em login, cadastro e "esqueci a
    senha"; o script embutido sai com nonce; `POST /api/csp-relatorio` responde 204; log de erros
    sem registros depois da publicação.
+
+## Correção do PCRE JIT (22/11/2026) — registro
+
+Desde 16/11/2026 a página inicial `/` respondia **500**: `preg_match(): Allocation of JIT memory
+failed` (o PHP da Locaweb, 8.4.28, passou a bloquear memória executável; o mesmo aconteceu no
+T.E.D., no minierp e no CRM M11). Correção: `ini_set('pcre.jit', '0')` no
+`deploy/index.producao.php`. O arquivo foi enviado direto por `scp` para
+`~/public_html/po/index.php` (o original ficou em `~/tmp/po_index.php.bak-20261122`), sem
+pacote. Depois disso `/`, `/login` e `/up` respondem 200. O código do servidor não mudou
+(último pacote publicado é o de 10/10/2026).
 
 ## Pendências de produção
 
