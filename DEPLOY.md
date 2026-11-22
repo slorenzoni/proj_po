@@ -122,6 +122,19 @@ T.E.D., no minierp e no CRM M11). Correção: `ini_set('pcre.jit', '0')` no
 pacote. Depois disso `/`, `/login` e `/up` respondem 200. O código do servidor não mudou
 (último pacote publicado é o de 10/10/2026).
 
+## Atualização de segurança das dependências (22/11/2026) — registro
+
+Commit `c29a1b4`: Symfony 8.1.8 → 8.1.11 e Laravel 13.34.0 → 13.43.0 (com as dependências),
+para zerar os 11 alertas do `composer audit --no-dev` (o mais grave médio: injeção em cabeçalho
+de e-mail no `symfony/mime`). Compatível com o PHP 8.4.28 do servidor. Sem migrations.
+
+1. SSH testado antes (`php84 artisan --version` = 13.34.0 no servidor, igual ao lock).
+2. Suíte (374 testes) e build conferidos; `montar-pacote.sh` (com o `pcre.jit` no `index.php`).
+3. `publicar.sh`: `/`, `/login`, `/eventos` e `/up` com 200; `artisan --version` = 13.43.0 no
+   servidor; sem erro novo no log.
+
+Repetir o `composer audit` a cada poucas semanas: alertas novos saem mesmo sem mudança no projeto.
+
 ## Pendências de produção
 
 - **CSP:** depois de alguns dias de uso, ler `~/po_app/storage/logs/csp-*.log` e, sem relato
